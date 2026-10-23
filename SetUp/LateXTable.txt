@@ -1,0 +1,1 @@
+{}&95&1011111100000& 1 &  {\tabfigure{height=0.14\textheight}{HPT3/1011111100000.pdf}}&\makecell[l]{}\\ \hline
