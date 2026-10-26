@@ -25,7 +25,7 @@ SectorLaporta=ReadList[FileNameJoin[{SectorDir,"SectorLaportaBasis.txt"}]];
 MaxCutInts=Range[53];
 AllSectors=True;
 (*MaxCutInts=Range[35];*)
-usedauxvar=S16
+usedauxvar=S12;
 changeAuxVar[usedauxvar];
 
 PureIntegralsMaxCut=SectorLaporta;
@@ -142,3 +142,6 @@ Ureduce//Length*)
 
 
 SUBLAPORTA
+
+
+PureIntegrals[[1]]

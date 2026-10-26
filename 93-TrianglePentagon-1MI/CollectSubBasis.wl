@@ -115,6 +115,8 @@ SelectInts={1,3,4,7,10,11,14,15,16,17,18,22,25,26,27,28,33,34,35,37,38,39,40,41,
 SelectInts//Length
 SubPureInts=PureIntegralsNew[[SelectInts]];
 SubPureInts=HPT3BASIS;
+
+
 SubPureInts=SubPureInts/.root[x_]:>root[Factor[x]];
 SubPureInts=SubPureInts/.root[x_^2]:>x;
 SubPureInts=SubPureInts/.root[x_]:>root[Expand[x]];
@@ -124,6 +126,9 @@ Sectors=Map[Last[Sort[Cases[{#},_HPT3,Infinity]/.{n_Integer/;n>1:>1,n_Integer/;n
 SectorsOld=Map[Last[Sort[Cases[{#},_HPT3,Infinity]/.{n_Integer/;n>1:>1,n_Integer/;n<0:>0}]]&,PureIntegralsOld[[SelectInts]]];
 Permutation=FindPermutation[Sectors,SectorsOld];
 SubPureInts=Permute[SubPureInts,Permutation];
+
+SubPureInts[[1]]=ep (-1+2 ep) (-2+3 ep) (-1+3 ep)SubPureInts[[1]]/s12;
+
 PureIntegralsNew[[SelectInts]]=SubPureInts;
 Newsqrts=(Cases[SubPureInts,root[___],Infinity]//DeleteDuplicates)/.root[x_]:>x;
 Oldsqrts=(Cases[PureIntegralsOld,root[___],Infinity]//DeleteDuplicates)/.root[x_]:>x;
@@ -144,10 +149,11 @@ Export[FileNameJoin[{ParentDirectory[NotebookDirectory[]],"/files/SortetBasisFul
 (*PlotDiagram*)
 
 
-plotDiagram[HPT3[1,1,1,0,1,1,0,1,0,0,0,0,0]]
+plotDiagram[SubPureInts[[1]]]
 (*BasisChangeInt=Collect[HXBBasis[[18]]/.mandchange/.hxbtohtp1,{_root,_HPT3}]//Factor*)
 
 
+SubPureInts[[2]]//Factor
 
 
 
@@ -195,4 +201,4 @@ DeleteDuplicates[Cases[TBASIS[[206]],_hxb,Infinity]/.{n_Integer/;n>1:>1,n_Intege
 HXBBasis[[5]]
 
 
-SubPureInts[[1]]
+Flatten[Position[Map[Length[Variables[#]]&,PureIntegralsNew],1]]

@@ -1,0 +1,83 @@
+(* line 1 *) HPT3[0, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0]
+
+(* line 2 *) HPT3[0, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0]
+
+(* line 3 *) HPT3[1, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0]
+
+(* line 4 *) ep^3 s12 HPT3[0, 1, 1, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0] - 2 ep^4 s12 HPT3[0, 1, 1, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0] - ep^3 s123 HPT3[0, 1, 1, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0] + 2 ep^4 s123 HPT3[0, 1, 1, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0]
+
+(* line 5 *) ep^3 s23 HPT3[1, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0] - 2 ep^4 s23 HPT3[1, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0]
+
+(* line 6 *) HPT3[0, 1, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0]
+
+(* line 7 *) HPT3[1, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0]
+
+(* line 8, I2: carrier = clean line-9 integral with prop3 doubled; bubble NOT pinched -> box {4,5,7,9} (prop4 added), no (1-2ep) *) ep^3 s12 s234 HPT3[0, 1, 2, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0]
+
+(* line 9 *) ep^3 HPT3[0, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0] root[s12^2 - 2 s12 s34 + s34^2 - 2 s12 s56 - 2 s34 s56 + s56^2] - 2 ep^4 HPT3[0, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0] root[s12^2 - 2 s12 s34 + s34^2 - 2 s12 s56 - 2 s34 s56 + s56^2]
+
+(* line 10 *) ep^3 s234 HPT3[1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0] - 2 ep^4 s234 HPT3[1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0] - ep^3 s34 HPT3[1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0] + 2 ep^4 s34 HPT3[1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0]
+
+(* line 11 *) ep^3 s123 HPT3[0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0] - 2 ep^4 s123 HPT3[0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0] - ep^3 s56 HPT3[0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0] + 2 ep^4 s56 HPT3[0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0]
+
+(* line 12 *) ep^3 s23 HPT3[1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0] - 2 ep^4 s23 HPT3[1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0] - ep^3 s234 HPT3[1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0] + 2 ep^4 s234 HPT3[1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0]
+
+(* line 13, I2: carrier = clean line-14 integral with prop3 doubled; bubble NOT pinched -> box {4,5,6,7,9} is a PENTAGON (prop4 added on top of an already-4-active heptagon), so also needs mu22; no (1-2ep) *) ep^3 HPT3[0, 1, 2, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0] root[-(s12^2*s23^2) + 2 s12^2 s23 s234 - 2 s12 s123 s23 s234 - s12^2 s234^2 + 2 s12 s123 s234^2 - s123^2 s234^2 - 2 s12 s123 s23 s34 + 2 s12 s23^2 s34 - 2 s12 s123 s234 s34 + 2 s123^2 s234 s34 - 2 s12 s23 s234 s34 - 2 s123 s23 s234 s34 - s123^2 s34^2 + 2 s123 s23 s34^2 - s23^2 s34^2 + 2 s12 s23^2 s56 - 2 s12 s23 s234 s56 + 2 s123 s23 s234 s56 + 4 s12 s23 s34 s56 - 2 s123 s23 s34 s56 + 2 s23^2 s34 s56 - s23^2 s56^2] GetMuIJ[{p[2],p[3],p[4],p[1]},2,2]
+
+(* line 14 *) ep^3 s123 s34 HPT3[0, 1, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0] - 2 ep^4 s123 s34 HPT3[0, 1, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0]
+
+(* line 15, I2: carrier = clean line-16 integral with prop3 doubled; prop4 already in heptagon-active set so box=triangle unchanged, just drop (1-2ep) *) ep^3 s23 s34 HPT3[1, 0, 2, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0]
+
+(* line 16 *) ep^3 s23 s34 HPT3[1, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0] - 2 ep^4 s23 s34 HPT3[1, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0]
+
+(* line 17 *) HPT3[1, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0]
+
+(* line 18, I2: carrier = clean line-19 integral with prop3 doubled; bubble NOT pinched -> box {4,5,8,9}, no (1-2ep) *) 2 ep^3 mt2 s12 HPT3[0, 1, 2, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0] - 2 ep^3 s12 s16 HPT3[0, 1, 2, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0]
+
+(* line 19 *) 2 ep^3 HPT3[0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0] root[mt2^2 - 2 mt2 s12 + s12^2 - 2 mt2 s345 - 2 s12 s345 + s345^2] - 4 ep^4 HPT3[0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0] root[mt2^2 - 2 mt2 s12 + s12^2 - 2 mt2 s345 - 2 s12 s345 + s345^2]
+
+(* line 20 *) 2 ep^3 s16 HPT3[1, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0] - 4 ep^4 s16 HPT3[1, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0] - 2 ep^3 s345 HPT3[1, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0] + 4 ep^4 s345 HPT3[1, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0]
+
+(* line 21, I2: carrier = clean line-22 integral with prop3 doubled; bubble NOT pinched -> box {4,6,8,9}, no (1-2ep) *) 2 ep^3 mt2 s123 HPT3[0, 1, 2, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0] - 2 ep^3 s123 s16 HPT3[0, 1, 2, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0]
+
+(* line 22 *) 2 ep^3 HPT3[0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0] root[mt2^2 - 2 mt2 s123 + s123^2 - 2 mt2 s45 - 2 s123 s45 + s45^2] - 4 ep^4 HPT3[0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0] root[mt2^2 - 2 mt2 s123 + s123^2 - 2 mt2 s45 - 2 s123 s45 + s45^2]
+
+(* line 23, I2: carrier = clean line-24 integral with prop3 doubled; prop4 already in heptagon-active set so box=triangle unchanged, just drop (1-2ep) *) 2 ep^3 HPT3[1, 0, 2, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0] root[s16^2 - 2 s16 s23 + s23^2 - 2 s16 s45 - 2 s23 s45 + s45^2]
+
+(* line 24 *) 2 ep^3 HPT3[1, 0, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0] root[s16^2 - 2 s16 s23 + s23^2 - 2 s16 s45 - 2 s23 s45 + s45^2] - 4 ep^4 HPT3[1, 0, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0] root[s16^2 - 2 s16 s23 + s23^2 - 2 s16 s45 - 2 s23 s45 + s45^2]
+
+(* line 25, I2: carrier = clean line-26 integral with prop3 doubled; bubble NOT pinched -> box {4,5,6,8,9} is a PENTAGON, so also needs mu22; no (1-2ep) *) 2 ep^3 HPT3[0, 1, 2, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0] root[-(s12^2*s16^2) + 2 s12 s123 s16^2 - s123^2 s16^2 - 2 mt2 s12 s16 s23 + 2 s12^2 s16 s23 + 2 mt2 s123 s16 s23 - 2 s12 s123 s16 s23 - mt2^2 s23^2 + 2 mt2 s12 s23^2 - s12^2 s23^2 - 2 s12 s123 s16 s345 + 2 s123^2 s16 s345 + 4 mt2 s12 s23 s345 - 2 mt2 s123 s23 s345 - 2 s12 s123 s23 s345 - 2 s12 s16 s23 s345 - 2 s123 s16 s23 s345 + 2 mt2 s23^2 s345 + 2 s12 s23^2 s345 - s123^2 s345^2 + 2 s123 s23 s345^2 - s23^2 s345^2 + 2 s12^2 s16 s45 - 2 s12 s123 s16 s45 - 2 mt2 s12 s23 s45 + 2 s12^2 s23 s45 + 4 s12 s16 s23 s45 + 2 s12 s123 s345 s45 - 2 s12 s23 s345 s45 - s12^2 s45^2] GetMuIJ[{p[2],p[3],p[6],p[1]},2,2]
+
+(* line 26 *) 2 ep^3 mt2 s12 HPT3[0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0] - 4 ep^4 mt2 s12 HPT3[0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0] - 2 ep^3 mt2 s123 HPT3[0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0] + 4 ep^4 mt2 s123 HPT3[0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0] + 2 ep^3 s123 s345 HPT3[0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0] - 4 ep^4 s123 s345 HPT3[0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0] - 2 ep^3 s12 s45 HPT3[0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0] + 4 ep^4 s12 s45 HPT3[0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0]
+
+(* line 27, I2: carrier = clean line-28 integral with prop3 doubled; prop4 already in heptagon-active set so box=triangle unchanged, just drop (1-2ep) *) 2 ep^3 mt2 s23 HPT3[1, 0, 2, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0] - 2 ep^3 s23 s345 HPT3[1, 0, 2, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0]
+
+(* line 28 *) 2 ep^3 mt2 s23 HPT3[1, 0, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0] - 4 ep^4 mt2 s23 HPT3[1, 0, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0] - 2 ep^3 s23 s345 HPT3[1, 0, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0] + 4 ep^4 s23 s345 HPT3[1, 0, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0]
+
+(* line 29, I2: carrier = clean line-30 integral with prop3 doubled; bubble NOT pinched -> box {4,7,8,9}, no (1-2ep) *) 2 ep^3 mt2 s56 HPT3[0, 1, 2, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0] - 2 ep^3 s16 s56 HPT3[0, 1, 2, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0]
+
+(* line 30 *) 2 ep^3 HPT3[0, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0] root[-((4 mt2 - s56) s56)] - 4 ep^4 HPT3[0, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0] root[-((4 mt2 - s56) s56)]
+
+(* line 31, I2: carrier = clean line-32 integral with prop3 doubled; prop4 already in heptagon-active set so box=triangle unchanged, just drop (1-2ep) *) 2 ep^3 HPT3[1, 0, 2, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0] root[mt2^2 - 2 mt2 s16 + s16^2 - 2 mt2 s234 - 2 s16 s234 + s234^2]
+
+(* line 32 *) 2 ep^3 HPT3[1, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0] root[mt2^2 - 2 mt2 s16 + s16^2 - 2 mt2 s234 - 2 s16 s234 + s234^2] - 4 ep^4 HPT3[1, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0] root[mt2^2 - 2 mt2 s16 + s16^2 - 2 mt2 s234 - 2 s16 s234 + s234^2]
+
+(* line 33, I2: carrier = clean line-34 integral with prop3 doubled; bubble NOT pinched -> box {4,5,7,8,9} is a PENTAGON, so also needs mu22; no (1-2ep) *) 2 ep^3 HPT3[0, 1, 2, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0] root[-(mt2^2*s12^2) + 2 mt2 s12^2 s16 - s12^2 s16^2 - 2 mt2^2 s12 s234 + 2 mt2 s12^2 s234 + 2 mt2 s12 s16 s234 + 2 s12^2 s16 s234 - mt2^2 s234^2 + 2 mt2 s12 s234^2 - s12^2 s234^2 + 2 mt2^2 s12 s34 - 4 mt2 s12 s16 s34 + 2 s12 s16^2 s34 + 2 mt2^2 s234 s34 - 2 mt2 s12 s234 s34 - 2 mt2 s16 s234 s34 - 2 s12 s16 s234 s34 - mt2^2 s34^2 + 2 mt2 s16 s34^2 - s16^2 s34^2 + 2 mt2 s12 s234 s345 - 2 s12 s16 s234 s345 + 2 mt2 s234^2 s345 + 2 s12 s234^2 s345 - 2 mt2 s234 s34 s345 + 2 s16 s234 s34 s345 - s234^2 s345^2 - 2 mt2 s12 s16 s56 + 2 s12 s16^2 s56 + 2 mt2 s16 s234 s56 - 2 s12 s16 s234 s56 - 2 mt2 s16 s34 s56 + 4 s12 s16 s34 s56 + 2 s16^2 s34 s56 + 2 mt2 s12 s345 s56 - 2 s12 s16 s345 s56 - 2 mt2 s234 s345 s56 - 2 s12 s234 s345 s56 - 2 s16 s234 s345 s56 + 2 mt2 s34 s345 s56 - 2 s16 s34 s345 s56 + 2 s234 s345^2 s56 - s16^2 s56^2 + 2 s16 s345 s56^2 - s345^2 s56^2] GetMuIJ[{p[2],p[5],p[6],p[1]},2,2]
+
+(* line 34 *) 2 ep^3 HPT3[0, 1, 1, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0] root[s56 (-4 mt2 s12 s34 + mt2^2 s56 - 2 mt2 s345 s56 + s345^2 s56)] - 4 ep^4 HPT3[0, 1, 1, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0] root[s56 (-4 mt2 s12 s34 + mt2^2 s56 - 2 mt2 s345 s56 + s345^2 s56)]
+
+(* line 35, I2: carrier = clean line-36 integral with prop3 doubled; prop4 already in heptagon-active set so box=triangle unchanged, just drop (1-2ep) *) 2 ep^3 mt2 s234 HPT3[1, 0, 2, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0] - 2 ep^3 mt2 s34 HPT3[1, 0, 2, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0] + 2 ep^3 s16 s34 HPT3[1, 0, 2, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0] - 2 ep^3 s234 s345 HPT3[1, 0, 2, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0]
+
+(* line 36 *) 2 ep^3 mt2 s234 HPT3[1, 0, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0] - 4 ep^4 mt2 s234 HPT3[1, 0, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0] - 2 ep^3 mt2 s34 HPT3[1, 0, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0] + 4 ep^4 mt2 s34 HPT3[1, 0, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0] + 2 ep^3 s16 s34 HPT3[1, 0, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0] - 4 ep^4 s16 s34 HPT3[1, 0, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0] - 2 ep^3 s234 s345 HPT3[1, 0, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0] + 4 ep^4 s234 s345 HPT3[1, 0, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0]
+
+(* line 37, I2: carrier = clean line-38 integral with prop3 doubled; bubble NOT pinched -> box {4,6,7,8,9} is a PENTAGON, so also needs mu22; no (1-2ep) *) 2 ep^3 HPT3[0, 1, 2, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0] root[-(mt2^2*s123^2) + 2 mt2 s123^2 s16 - s123^2 s16^2 - 2 mt2^2 s123 s234 + 2 mt2 s123^2 s234 + 2 mt2 s123 s16 s234 + 2 s123^2 s16 s234 - 4 mt2 s123 s23 s234 - mt2^2 s234^2 + 2 mt2 s123 s234^2 - s123^2 s234^2 + 2 mt2 s123 s234 s45 - 2 s123 s16 s234 s45 + 2 mt2 s234^2 s45 + 2 s123 s234^2 s45 - s234^2 s45^2 - 2 mt2 s123 s16 s56 + 2 s123 s16^2 s56 + 4 mt2^2 s23 s56 - 2 mt2 s123 s23 s56 - 4 mt2 s16 s23 s56 - 2 s123 s16 s23 s56 + 4 mt2 s23^2 s56 + 2 mt2 s16 s234 s56 - 2 s123 s16 s234 s56 - 2 mt2 s23 s234 s56 + 2 s123 s23 s234 s56 + 2 mt2 s123 s45 s56 - 2 s123 s16 s45 s56 - 4 mt2 s23 s45 s56 + 4 s16 s23 s45 s56 - 2 mt2 s234 s45 s56 - 2 s123 s234 s45 s56 - 2 s16 s234 s45 s56 - 2 s23 s234 s45 s56 + 2 s234 s45^2 s56 - s16^2 s56^2 + 2 s16 s23 s56^2 - s23^2 s56^2 + 2 s16 s45 s56^2 + 2 s23 s45 s56^2 - s45^2 s56^2] GetMuIJ[{p[4],p[5],p[6],p[1]},2,2]
+
+(* line 38 *) 2 ep^3 mt2 s56 HPT3[0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0] - 4 ep^4 mt2 s56 HPT3[0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0] - 2 ep^3 s45 s56 HPT3[0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0] + 4 ep^4 s45 s56 HPT3[0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0]
+
+(* line 39, I2: carrier = clean line-40 integral with prop3 doubled; prop4 already in heptagon-active set so box=triangle unchanged, just drop (1-2ep) *) 2 ep^3 mt2 s234 HPT3[1, 0, 2, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0] - 2 ep^3 s234 s45 HPT3[1, 0, 2, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0]
+
+(* line 40 *) 2 ep^3 mt2 s234 HPT3[1, 0, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0] - 4 ep^4 mt2 s234 HPT3[1, 0, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0] - 2 ep^3 s234 s45 HPT3[1, 0, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0] + 4 ep^4 s234 s45 HPT3[1, 0, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0]
+
+(* line 41, PENTAGON (own raw ISP representative; mu22=GetMuIJ[...,2,2] via live call using 4 of the 5 legs {p3,p4,p5,p6,p1+p2} from Get1LLeadingSing, dropping the merged leg) *) 2 ep^3 HPT3[-1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0] root[-mt2^2 s12^2 + 2 mt2^2 s12 s123 - mt2^2 s123^2 + 2 mt2^2 s12 s34 - 2 mt2^2 s123 s34 - 2 mt2 s12 s123 s34 + 2 mt2 s123^2 s34 - mt2^2 s34^2 + 2 mt2 s123 s34^2 - s123^2 s34^2 - 2 mt2 s12 s123 s345 + 2 mt2 s123^2 s345 + 2 mt2 s123 s34 s345 + 2 s123^2 s34 s345 - s123^2 s345^2 + 2 mt2 s12^2 s45 - 2 mt2 s12 s123 s45 - 4 mt2 s12 s34 s45 + 2 mt2 s123 s34 s45 - 2 s12 s123 s34 s45 + 2 mt2 s34^2 s45 + 2 s123 s34^2 s45 + 2 s12 s123 s345 s45 - 2 s123 s34 s345 s45 - s12^2 s45^2 + 2 s12 s34 s45^2 - s34^2 s45^2 + 2 mt2 s12 s345 s56 - 2 mt2 s123 s345 s56 + 2 mt2 s34 s345 s56 - 2 s123 s34 s345 s56 + 2 s123 s345^2 s56 - 2 mt2 s12 s45 s56 + 2 mt2 s123 s45 s56 - 2 mt2 s34 s45 s56 + 4 s12 s34 s45 s56 - 2 s123 s34 s45 s56 - 2 s12 s345 s45 s56 - 2 s123 s345 s45 s56 - 2 s34 s345 s45 s56 + 2 s12 s45^2 s56 + 2 s34 s45^2 s56 - s345^2 s56^2 + 2 s345 s45 s56^2 - s45^2 s56^2] GetMuIJ[{p[3],p[4],p[5],p[6]},2,2] - 4 ep^4 HPT3[-1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0] root[-mt2^2 s12^2 + 2 mt2^2 s12 s123 - mt2^2 s123^2 + 2 mt2^2 s12 s34 - 2 mt2^2 s123 s34 - 2 mt2 s12 s123 s34 + 2 mt2 s123^2 s34 - mt2^2 s34^2 + 2 mt2 s123 s34^2 - s123^2 s34^2 - 2 mt2 s12 s123 s345 + 2 mt2 s123^2 s345 + 2 mt2 s123 s34 s345 + 2 s123^2 s34 s345 - s123^2 s345^2 + 2 mt2 s12^2 s45 - 2 mt2 s12 s123 s45 - 4 mt2 s12 s34 s45 + 2 mt2 s123 s34 s45 - 2 s12 s123 s34 s45 + 2 mt2 s34^2 s45 + 2 s123 s34^2 s45 + 2 s12 s123 s345 s45 - 2 s123 s34 s345 s45 - s12^2 s45^2 + 2 s12 s34 s45^2 - s34^2 s45^2 + 2 mt2 s12 s345 s56 - 2 mt2 s123 s345 s56 + 2 mt2 s34 s345 s56 - 2 s123 s34 s345 s56 + 2 s123 s345^2 s56 - 2 mt2 s12 s45 s56 + 2 mt2 s123 s45 s56 - 2 mt2 s34 s45 s56 + 4 s12 s34 s45 s56 - 2 s123 s34 s45 s56 - 2 s12 s345 s45 s56 - 2 s123 s345 s45 s56 - 2 s34 s345 s45 s56 + 2 s12 s45^2 s56 + 2 s34 s45^2 s56 - s345^2 s56^2 + 2 s345 s45 s56^2 - s45^2 s56^2] GetMuIJ[{p[3],p[4],p[5],p[6]},2,2]
+
+(* line 42, PENTAGON (own raw ISP representative; mu22=GetMuIJ[...,2,2] via live call using 4 of the 5 legs {p2,p3,p4,p5,p1+p6} from Get1LLeadingSing, dropping the merged leg) *) 2 ep^3 HPT3[1, 0, 1, 1, 1, 1, 1, 1, -1, 0, 0, 0, 0] root[-mt2^2 s23^2 - 2 mt2 s16 s23 s34 + 2 mt2 s23^2 s34 - s16^2 s34^2 + 2 s16 s23 s34^2 - s23^2 s34^2 + 2 mt2 s23^2 s345 - 2 mt2 s23 s234 s345 + 4 mt2 s23 s34 s345 - 2 s16 s23 s34 s345 + 2 s23^2 s34 s345 + 2 s16 s234 s34 s345 - 2 s23 s234 s34 s345 - s23^2 s345^2 + 2 s23 s234 s345^2 - s234^2 s345^2 + 2 mt2 s23 s234 s45 - 2 mt2 s23 s34 s45 + 4 s16 s23 s34 s45 - 2 s16 s234 s34 s45 - 2 s23 s234 s34 s45 + 2 s16 s34^2 s45 + 2 s23 s34^2 s45 - 2 s23 s234 s345 s45 + 2 s234^2 s345 s45 - 2 s23 s34 s345 s45 - 2 s234 s34 s345 s45 - s234^2 s45^2 + 2 s234 s34 s45^2 - s34^2 s45^2] GetMuIJ[{p[2],p[3],p[4],p[5]},2,2] - 4 ep^4 HPT3[1, 0, 1, 1, 1, 1, 1, 1, -1, 0, 0, 0, 0] root[-mt2^2 s23^2 - 2 mt2 s16 s23 s34 + 2 mt2 s23^2 s34 - s16^2 s34^2 + 2 s16 s23 s34^2 - s23^2 s34^2 + 2 mt2 s23^2 s345 - 2 mt2 s23 s234 s345 + 4 mt2 s23 s34 s345 - 2 s16 s23 s34 s345 + 2 s23^2 s34 s345 + 2 s16 s234 s34 s345 - 2 s23 s234 s34 s345 - s23^2 s345^2 + 2 s23 s234 s345^2 - s234^2 s345^2 + 2 mt2 s23 s234 s45 - 2 mt2 s23 s34 s45 + 4 s16 s23 s34 s45 - 2 s16 s234 s34 s45 - 2 s23 s234 s34 s45 + 2 s16 s34^2 s45 + 2 s23 s34^2 s45 - 2 s23 s234 s345 s45 + 2 s234^2 s345 s45 - 2 s23 s34 s345 s45 - 2 s234 s34 s345 s45 - s234^2 s45^2 + 2 s234 s34 s45^2 - s34^2 s45^2] GetMuIJ[{p[2],p[3],p[4],p[5]},2,2]
