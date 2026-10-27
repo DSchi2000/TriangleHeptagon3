@@ -55,4 +55,10 @@ Export[CurrentDir<>"/BasisFixed.txt",FixedBasis]
 
 
 
+TB=Together[GetMuIJ[{p[1],p[2]+p[3],p[4],p[5]},2,2]]
 
+
+Together
+
+
+TA=Together[ GetMuIJ[{p[4],p[5],p[6],p[1]},2,2]]

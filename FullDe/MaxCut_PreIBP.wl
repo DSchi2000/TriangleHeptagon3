@@ -141,5 +141,3 @@ tPoint=GetRandomPT[0,$P]*)
 rtset[[-3]]
 rtset[[-4]]
 
-
-

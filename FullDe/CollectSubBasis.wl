@@ -46,26 +46,64 @@ Get[FileNameJoin[{Directory[],"files/DifferentialOperator.m"}]];
 (*85-86"*)
 
 
-GramVec1={k[1],p[1],p[2],p[3],p[4]+p[5]};
-GramVec2={k[2],p[1],p[2],p[3],p[4]+p[5]};
+GramVec1={k[1],p[1],p[2]+p[3],p[4],p[5]};
+GramVec2={k[2],p[1],p[2]+p[3],p[4],p[5]};
 mu12=Collect[Expand[Det[Table[Expand[(GramVec1[[i]] GramVec2[[j]])/.p4cons],{i,1,5},{j,1,5}]/.loopMomentumScalarProducts/.mandelstamScalarProducts/.kinematics]],PR[___],Together]/Expand[2Det[Table[Expand[(GramVec1[[i]] GramVec2[[j]])/.p4cons],{i,2,5},{j,2,5}]/.mandelstamScalarProducts/.kinematics]];
 mu11=Collect[Expand[Det[Table[Expand[(GramVec1[[i]] GramVec1[[j]])/.p4cons],{i,1,5},{j,1,5}]/.loopMomentumScalarProducts/.mandelstamScalarProducts/.kinematics]],PR[___],Together]/Expand[2Det[Table[Expand[(GramVec1[[i]] GramVec1[[j]])/.p4cons],{i,2,5},{j,2,5}]/.mandelstamScalarProducts/.kinematics]];
 mu22=Collect[Expand[Det[Table[Expand[(GramVec2[[i]] GramVec2[[j]])/.p4cons],{i,1,5},{j,1,5}]/.loopMomentumScalarProducts/.mandelstamScalarProducts/.kinematics]],PR[___],Together]/Expand[2Det[Table[Expand[(GramVec2[[i]] GramVec2[[j]])/.p4cons],{i,2,5},{j,2,5}]/.mandelstamScalarProducts/.kinematics]];
 Variables[mu12]//Sort
 Variables[mu11]//Sort
 Variables[mu22]//Sort
-tr5=root[Expand[16Det[Table[Expand[(GramVec1[[i]] GramVec2[[j]])/.p4cons],{i,2,5},{j,2,5}]/.mandelstamScalarProducts/.kinematics]]];
+tr5=root[Expand[Det[2*Table[Expand[(GramVec1[[i]] GramVec2[[j]])/.p4cons],{i,2,5},{j,2,5}]/.mandelstamScalarProducts/.kinematics]]];
+
+TestBasis= ep^3 tr5 Collect[ Expand[Together[mu22] HPT3[0, 1, 2, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0]],{_root,_HPT3},Factor];
+
+
+(* ::Section:: *)
+(*2,5,6,12,13*)
+
+
+prefac=ep^2 (1-2 ep)(1-3 ep)
+Int[2]=prefac*PureIntegralsOld[[2]]
+Int[5]=prefac*PureIntegralsOld[[5]]
+Int[6]=prefac*PureIntegralsOld[[6]]
+Int[12]=prefac*PureIntegralsOld[[12]]
+Int[13]=prefac*PureIntegralsOld[[13]]
+
+(*TestBasis= ep^3 tr5 Collect[ Expand[Together[mu22] HPT3[0, 1, 2, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0]],{_root,_HPT3},Factor];*)
+
+
+Together[mu22];
 
 
 
-FixedBasis=ReadList[CurrentDir<>"/BasisFixed.txt"];
 
 
 test=Cases[FixedBasis,_root,Infinity]/.root[x_]:>x;
 
 
+Position[FixedBasis,HPT3[0,1,2,0,0,1,1,1,1,0,0,0,0]]
+
+
+SubPureInts[[86]]
+
+
+plotDiagram[HPT3[1,0,2,1,0,1,1,1,0,0,0,0,0]]
+
+
+test=Cases[SubPureInts[[87]],_HPT3,Infinity]//DeleteDuplicates
+test=Cases[SubPureInts[[88]],_HPT3,Infinity]//DeleteDuplicates
+
+
 (* ::Section:: *)
 (*Build SubBasis*)
+
+
+FixedBasis=ReadList[CurrentDir<>"/CanonicalizedToDo.wl"];
+FixedBasis=Collect[Expand[FixedBasis],{_root,_HPT3},Factor]
+Export[CurrentDir<>"/BasisFixed.txt",FixedBasis]
+
+FixedBasis=ReadList[CurrentDir<>"/BasisFixed.txt"];
 
 
 SetDirectory[ParentDirectory[NotebookDirectory[]]];
@@ -83,11 +121,19 @@ SubPureInts=SubPureInts/.root[x_^2]:>x;
 SubPureInts=SubPureInts/.root[x_]:>root[Expand[x]];
 SubPureInts=SubPureInts/.signrepls;
 
+SubPureInts[[2]]=Int[2];
+SubPureInts[[5]]=Int[5];
+SubPureInts[[6]]=Int[6];
+SubPureInts[[12]]=Int[12];
+SubPureInts[[13]]=Int[13];
+
 PureIntegralsOld/.{n_Integer/;n>1:>1,n_Integer/;n<0:>0};
 Sectors=Map[Last[Sort[Cases[{#},_HPT3,Infinity]/.{n_Integer/;n>1:>1,n_Integer/;n<0:>0}]]&,SubPureInts];
 SectorsOld=Map[Last[Sort[Cases[{#},_HPT3,Infinity]/.{n_Integer/;n>1:>1,n_Integer/;n<0:>0}]]&,PureIntegralsOld[[SelectInts]]];
 Permutation=FindPermutation[Sectors,SectorsOld];
 SubPureInts=Permute[SubPureInts,Permutation];
+
+(*SubPureInts[[85]]=TestBasis;*)
 
 PureIntegralsNew[[SelectInts]]=SubPureInts;
 Newsqrts=(Cases[SubPureInts,root[___],Infinity]//DeleteDuplicates)/.root[x_]:>x;
@@ -99,27 +145,20 @@ Export[FileNameJoin[{NotebookDirectory[],"Roots.txt"}],Newsqrts];
 Export[FileNameJoin[{NotebookDirectory[],"SubBasis.txt"}],SubPureInts];
 
 
-sqrtSetNew[[-1]]
-sqrtSetNew[[-2]]
-sqrtSetNew[[-3]]
-sqrtSetNew[[-4]]
-sqrtSetNew[[-5]]
-sqrtSetNew[[-6]]
-sqrtSetNew[[-7]]
+(* ::Subsection:: *)
+(*Roots Fixing*)
 
 
-signrepls=Table[root[sqrtSetNew[[i]]]->root[-sqrtSetNew[[i]]],{i,{-1,-2,-3,-4,-5,-6}}];
+FlipPos=Flatten[Position[sqrtSetNew[[All,1]]/.Thread[Rule[invariants,1]],-1]]
+signrepls=Table[root[sqrtSetNew[[i]]]->root[-sqrtSetNew[[i]]],{i,FlipPos}];
 
 
-
-
-signrepls
 
 
 Cases[SubPureInts[[-11]],_root,Infinity]/.signrepls
 
 
-sqrtSetNew[[-3]]
+sqrtSetNew
 
 
 (* ::Section:: *)
@@ -185,10 +224,8 @@ DeleteDuplicates[Cases[TBASIS[[206]],_hxb,Infinity]/.{n_Integer/;n>1:>1,n_Intege
 HXBBasis[[5]]
 
 
-SubPureInts[[1]]
+SubPureInts[[79]]
+SubPureInts[[80]]
 
 
-Get1LLeadingSing[{p[1],p[2],p[3],p[4]+p[5],p[6]},{0,0,0,0,mt2}]
 
-
-Get1LLeadingSing[{p[1]+p[2],p[3],p[4]+p[5],p[6]},{0,0,0,mt2}]

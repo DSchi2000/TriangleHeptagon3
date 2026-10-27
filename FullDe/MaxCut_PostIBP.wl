@@ -142,22 +142,21 @@ Test=ComputeDIMC[1];
 (*Debug2*)
 
 
-NewSet={2,5,6,8,9,12,13,19,20,21,23,24,29,30,31,32,36,42,43,44,51,52,53,54,59,60,61,62,67,68,69,70,77,78,79,80,85,86,87,88,94,95};
-Factor[ArrayReshape[MatReco[mt2],{BasisLength,BasisLength}],Modulus->$P][[NewSet,NewSet]]//MatrixForm
+(*NewSet={2,5,6,8,9,12,13,19,20,21,23,24,29,30,31,32,36,42,43,44,51,52,53,54,59,60,61,62,67,68,69,70,77,78,79,80,85,86,87,88,94,95};*)
+NewSet={2,5,6,12,13,78,86,88};
+Factor[Sum[ArrayReshape[MatReco[var],{BasisLength,BasisLength}][[NewSet,NewSet]],{var,diffInvariants}],Modulus->$P]
 
 
 (* ::Input:: *)
 (**)
 
 
-Factor[ArrayReshape[MatReco[mt2],{BasisLength,BasisLength}],Modulus->$P][[{85,86,87,88},{85,86,87,88}]]//MatrixForm
+Position[Diagonal[ArrayReshape[MatReco[mt2],{BasisLength,BasisLength}]]/.\[Epsilon]->0/.n_Integer/;(n>0):>1,1]//Flatten
+Position[Sum[Diagonal[ArrayReshape[MatReco[var],{BasisLength,BasisLength}]]/.\[Epsilon]->0,{var,diffInvariants}]/.n_Integer/;(n>0):>1,1]//Flatten
 
 
-PureIntegrals[[85]]
-PureIntegrals[[86]]
+PureIntegrals[[94]]
+PureIntegrals[[95]]
 
 
-plotDiagram[ HPT3[0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0]]
 
-
-Position[Diagonal[Factor[ArrayReshape[MatReco[mt2],{BasisLength,BasisLength}],Modulus->$P]]/.\[Epsilon]->0/.n_Integer/;(n>0):>1,1]//Flatten
