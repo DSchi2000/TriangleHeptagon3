@@ -1,0 +1,354 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{mathtools}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{xcolor}
+
+\newcommand{\ang}[2]{\langle #1\,#2\rangle}
+\newcommand{\sq}[2]{[#1\,#2]}
+\newcommand{\lam}{\lambda}
+\newcommand{\lt}{\tilde\lambda}
+\newcommand{\eqdef}{\coloneqq}
+
+\theoremstyle{definition}
+\newtheorem{proposition}{Proposition}
+\newtheorem{example}{Example}
+\newtheorem{remark}{Remark}
+
+\title{Massive Univariate BCFW Slices for Kinematic Reconstruction}
+\author{}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\noindent
+Finite-field functional reconstruction of multi-loop integral coefficients is cheapest along a
+\emph{univariate slice} $\vec s(t) = \vec a + \vec b\, t$: a line in the space of Mandelstam
+invariants along which every invariant is an exact degree-one polynomial in $t$. For six or more
+external legs, momentum conservation and four-dimensionality force a nontrivial algebraic
+relation among the invariants (the \emph{Gram constraint}), and a line that satisfies it exactly
+for every $t$ is not obvious to write down by hand. This note explains, from first principles,
+how to build such a line out of spinor-helicity data so that the Gram constraint holds
+\emph{automatically}, works through a fully explicit massless example, and then shows exactly
+what has to change -- and, just as importantly, what does \emph{not} -- when two of the external
+legs are massive, as in $t\bar t b\bar b$-type kinematics.
+\end{abstract}
+
+\section{The problem}
+
+Consider $n$ external momenta $p_1,\dots,p_n$ satisfying momentum conservation
+$\sum_i p_i = 0$ and living in four-dimensional Minkowski space. Define the Gram
+determinant of a set of vectors $u_1,\dots,u_k$ by
+\begin{equation}
+G(u_1,\dots,u_k) \;\eqdef\; \det\big(2\, u_i\!\cdot\! u_j\big)_{i,j=1}^k .
+\end{equation}
+
+\begin{proposition}[The $n$-point Gram constraint]
+\label{prop:gram}
+If $v_1,\dots,v_5$ are any five vectors in a space of dimension $\le 4$, then
+$G(v_1,\dots,v_5)=0$.
+\end{proposition}
+\begin{proof}
+Five vectors in a $\le\!4$-dimensional space are linearly dependent, so the $5\times 5$ Gram
+matrix $(2v_i\cdot v_j)$ has rank $\le 4$ and vanishing determinant.
+\end{proof}
+
+Applying this to any five of the $n$ external momenta gives $G(p_{i_1},\dots,p_{i_5})=0$: a
+single nontrivial polynomial relation among the Mandelstam invariants once $n\ge 6$. Two
+features of Proposition~\ref{prop:gram} are worth stressing because the rest of this note hinges
+on them:
+\begin{itemize}
+\item \textbf{It is pure linear algebra.} Nothing about masslessness, on-shellness, or which
+  invariants you call independent enters the proof -- only that the vectors live in $\le 4$
+  dimensions. Whatever makes legs massive cannot break it, and nothing needs to be done
+  specially to \emph{enforce} it on a genuine 4D configuration: it is automatic.
+\item \textbf{It is a relation, not a parametrization.} Knowing $G=0$ tells you the invariants
+  are not all independent, but solving it directly for one of them (say $s_{16}$) requires a
+  square root of the discriminant. A line built by solving the constraint this way is
+  \emph{quadratic}, not linear, in its parameter -- exactly the obstruction we want to avoid.
+\end{itemize}
+
+The strategy below sidesteps the square root entirely: rather than solving the constraint, we
+build momenta that are \emph{manifestly} rank-$\le\!4$ for every value of the slice parameter, so
+Proposition~\ref{prop:gram} applies for free.
+
+\section{Massless spinor-helicity preliminaries}
+
+A massless momentum is written as a bispinor product
+\begin{equation}
+p^{\alpha\dot\alpha} = \lam^\alpha \lt^{\dot\alpha},
+\end{equation}
+with $\lam,\lt \in \mathbb{C}^2$. Since $p^{\alpha\dot\alpha}$ is manifestly rank one,
+$\det p = p^2 = 0$ automatically -- masslessness is not imposed, it is built in. Antisymmetric
+spinor brackets are
+\begin{equation}
+\ang{i}{j} \eqdef \lam_i^1\lam_j^2 - \lam_i^2\lam_j^1, \qquad
+\sq{i}{j} \eqdef \lt_i^1\lt_j^2 - \lt_i^2\lt_j^1 ,
+\end{equation}
+and the basic dictionary entry we will use repeatedly is
+\begin{equation}
+2\, p_i\!\cdot\! p_j \;=\; \ang{i}{j}\,\sq{j}{i}. \label{eq:2pdotp}
+\end{equation}
+
+\section{The all-line holomorphic shift}
+\label{sec:shift}
+
+Pick a fixed reference spinor $\eta$ and numbers $c_1,\dots,c_n$, and deform every
+holomorphic spinor by a common multiple of $\eta$ while leaving every anti-holomorphic spinor
+untouched:
+\begin{equation}
+\lam_i(t) \;=\; \lam_i + t\, c_i\, \eta, \qquad \lt_i(t) \;=\; \lt_i . \label{eq:shift}
+\end{equation}
+This is the shift used (for example) in \cite{Abreu2412,Abreu2110} to build univariate slices for
+functional reconstruction; it is a different object from the classic two-particle BCFW
+recursion shift (which deforms one leg's $\lam$ and another leg's $\lt$ oppositely), but shares
+its spirit: a holomorphic deformation that preserves on-shellness and momentum conservation
+exactly.
+
+\paragraph{On-shellness.} Trivial: $\lt_i$ never moves, so $p_i(t)=\lam_i(t)\lt_i(t)$ stays rank
+one, hence null, for every $t$.
+
+\paragraph{Momentum conservation.} $\sum_i p_i(t) = \sum_i p_i + t\sum_i c_i(\eta\lt_i) $ as a
+bispinor; the $O(t)$ term vanishes iff
+\begin{equation}
+\sum_i c_i\, \lt_i \;=\; 0, \label{eq:momcons}
+\end{equation}
+\emph{one} linear (2-component) equation in the $c_i$. Any solution works; with $n$ unknowns
+and 2 constraints there are $n-2$ free parameters left over, which is where the genericity of the
+slice comes from.
+
+\paragraph{Linearity of every invariant.} Expand the shifted angle bracket:
+\begin{equation}
+\ang{i}{j}(t) = \ang{i}{j} + t\big(c_i\ang{\eta}{j} + c_j\ang{i}{\eta}\big) + t^2 c_ic_j\ang{\eta}{\eta}.
+\end{equation}
+The $t^2$ term vanishes identically because $\ang{\eta}{\eta}=0$ for any spinor (antisymmetry) --
+not a special property of this configuration, true for \emph{any} choice of $\eta$. So every
+angle bracket is \emph{exactly} linear in $t$; since $\sq{j}{i}$ never moves, every
+$2p_i\cdot p_j$ in \eqref{eq:2pdotp}, and hence every Mandelstam invariant (a sum of such terms),
+is linear in $t$.
+
+\paragraph{The Gram constraint.} For every $t$, the $p_i(t)$ are honest null, momentum-conserving
+4-vectors -- nothing about $t$ changes that. Proposition~\ref{prop:gram} therefore applies for
+\emph{every} $t$ simultaneously: $G(p_{i_1}(t),\dots,p_{i_5}(t)) \equiv 0$ as a polynomial in $t$,
+not just at $t=0$. This is the entire point of the construction: the constraint is never solved,
+it is a free corollary of building genuinely 4D momenta.
+
+\subsection{Worked example: a massless hexagon}
+\label{sec:masslessexample}
+
+Take $n=6$ massless momenta. Four lines are chosen freely,
+\begin{equation}
+\begin{aligned}
+\lam_1&=(1,0), & \lt_1&=(1,1), \\
+\lam_2&=(0,1), & \lt_2&=(2,1), \\
+\lam_3&=(1,1), & \lt_3&=(1,-1), \\
+\lam_4&=(1,-1), & \lt_4&=(1,2),
+\end{aligned}
+\end{equation}
+and lines 5,6 are then \emph{not} free: for six massless momenta to satisfy momentum
+conservation at all, $p_5+p_6$ must equal the specific (generically non-null) bispinor
+$Q = -(p_1+p_2+p_3+p_4)$, which only has a rank-one (null+null) decomposition for special
+$\lam_5$. Concretely: pick $\lam_5=(2,1)$ freely, then $\det(Q-\lam_5\otimes\lt_5)=0$ is one
+linear equation fixing $\lt_5$ (this is the same type of single linear solve as
+\eqref{eq:momcons}; see Remark~\ref{rem:completion}). Solving it and reading $p_6$ off the
+resulting rank-one remainder gives
+\begin{equation}
+\lam_5=(2,1),\ \lt_5=(1,-16), \qquad \lam_6=(-5,-3),\ \lt_6=(1,-6).
+\end{equation}
+One checks directly that this point already satisfies $G(p_1,p_2,p_3,p_4,p_5)=0$ -- it has to,
+by Proposition~\ref{prop:gram}, since these are six genuine on-shell momenta summing to zero.
+
+Choosing the reference spinor $\eta=(1,2)$ and solving \eqref{eq:momcons} (after freely fixing
+$c_2=c_4=0$ for simplicity, then solving $c_5,c_6$; an overall rescaling is used to clear
+denominators) gives
+\begin{equation}
+(c_1,c_2,c_3,c_4,c_5,c_6) = (5,\,0,\,5,\,0,\,6,\,-16).
+\end{equation}
+Evaluating \eqref{eq:2pdotp} along the shift \eqref{eq:shift} with these numbers gives, exactly:
+\begin{equation}
+\begin{alignedat}{3}
+s_{12}(t) &= 1 + 5t, &\qquad s_{23}(t) &= -3 - 15t, &\qquad s_{34}(t) &= 6+45t,\\
+s_{45}(t) &= 54+324t, &\qquad s_{56}(t) &= 10+60t, &\qquad s_{16}(t) &= -21+21t,\\
+s_{123}(t) &= 2+10t, &\qquad s_{234}(t) &= 9+30t, &\qquad s_{345}(t) &= 30+99t,
+\end{alignedat}
+\end{equation}
+and direct expansion of the $5\times5$ determinant confirms
+\begin{equation}
+G\big(p_1(t),p_2(t),p_3(t),p_4(t),p_5(t)\big) \;=\; 0 \qquad \text{identically in } t.
+\end{equation}
+Every invariant is manifestly degree one in $t$, and the constraint never had to be imposed by
+hand.
+
+\begin{remark}[The ``last two legs'' completion]
+\label{rem:completion}
+Generating the base point itself (choosing $\lam_5,\lt_5,\lam_6,\lt_6$ so that $p_5+p_6=Q$ with
+both null) uses the same elementary trick throughout this note: for a $2\times2$ bispinor $M$ and
+a fixed $v$, $\det(M - v\otimes w)$ is \emph{linear}, not quadratic, in $w$ (a standard adjugate
+identity), so fixing $v$ and solving $\det(M-v\otimes w)=0$ for $w$ is always a single linear
+equation. This is reused twice below for the massive base point.
+\end{remark}
+
+\section{What changes for massive legs}
+
+Now suppose legs 5 and 6 are massive, $p_5^2=p_6^2=m_t^2\neq0$ (e.g.\ a top/antitop pair), with
+legs 1--4 still massless -- exactly the external kinematics of $t\bar t b\bar b$-type processes.
+A massive momentum has no single null $(\lam,\lt)$ pair, so \eqref{eq:shift} cannot be applied to
+it directly. The fix changes remarkably little.
+
+\subsection{Split each massive leg into two null constituents}
+
+Write
+\begin{equation}
+p_5 = q_{5a}+q_{5b}, \qquad p_6 = q_{6a}+q_{6b},
+\end{equation}
+with all four $q$'s individually null. This is not a trick specific to this computation: it is
+exactly the two-component little-group decomposition of a massive momentum,
+$p^{\alpha\dot\alpha}=\lam^{I\alpha}\lt_I^{\dot\alpha}$ ($I=1,2$), with $q_{5a},q_{5b}$ the two
+little-group components. Using \eqref{eq:2pdotp},
+\begin{equation}
+m_t^2 = p_5^2 = 2\,q_{5a}\!\cdot\! q_{5b} = \ang{5a}{5b}\sq{5b}{5a}, \label{eq:masssquare}
+\end{equation}
+so \emph{the mass is just one more spinor bracket}. Generating the $t=0$ base point now means:
+pick $\lam_{5a},\lt_{5a},\lam_{5b}$ freely, then \eqref{eq:masssquare} is one linear equation
+fixing $\lt_{5b}$ (same mechanism as Remark~\ref{rem:completion}); likewise for leg 6; then the
+remaining two legs (1,2 free, 3 free + 4 completed, say) are fixed by overall momentum
+conservation exactly as before, now summing over all eight null constituents
+$\{1,2,3,4,5a,5b,6a,6b\}$ instead of six.
+
+\subsection{The shift, and one new ingredient}
+
+Apply the \emph{same} all-line shift \eqref{eq:shift} to all eight constituent spinors. Nothing
+in the on-shellness or momentum-conservation arguments of Section~\ref{sec:shift} changes --
+\eqref{eq:momcons} simply has eight terms instead of six. What is new is that we must decide how
+the mass behaves along the slice, since \eqref{eq:masssquare} will itself move under the shift:
+\begin{equation}
+m_t^2(t) = \ang{5a}{5b}(t)\,\sq{5b}{5a}
+         = \Big[\ang{5a}{5b} + t\big(c_{5a}\ang{\eta}{5b}+c_{5b}\ang{5a}{\eta}\big)\Big]\sq{5b}{5a},
+\end{equation}
+linear in $t$ by exactly the same bracket argument as before ($\sq{5b}{5a}$ never moves). Two
+options:
+\begin{itemize}
+\item \textbf{Hold $m_t^2$ fixed.} Demand the $O(t)$ term above vanishes:
+  \begin{equation}
+  c_{5a}\ang{\eta}{5b}+c_{5b}\ang{5a}{\eta} = 0, \qquad
+  c_{6a}\ang{\eta}{6b}+c_{6b}\ang{6a}{\eta} = 0,
+  \end{equation}
+  one linear constraint per massive leg (2 total). Useful if you want several slices at different
+  fixed physical masses.
+\item \textbf{Let $m_t^2$ run, shared between the top and antitop.} Since $p_5^2=p_6^2$ must hold
+  identically along a \emph{physical} slice (same particle, same mass), tie the two slopes
+  together instead of killing them:
+  \begin{equation}
+  \sq{5b}{5a}\big(c_{5a}\ang{\eta}{5b}+c_{5b}\ang{5a}{\eta}\big)
+  \;=\;
+  \sq{6b}{6a}\big(c_{6a}\ang{\eta}{6b}+c_{6b}\ang{6a}{\eta}\big),
+  \end{equation}
+  one linear constraint total. Now $m_t^2$ becomes a genuine extra linear slice direction,
+  exactly on the same footing as $s_{12},\dots,s_{56}$ -- which is the more useful choice in
+  practice, since it lets a single line probe the mass-dependence together with the
+  Mandelstam-dependence.
+\end{itemize}
+Either way: 8 unknowns $c_k$, 2 (momentum conservation) $+$ 1 or 2 (mass handling) linear
+constraints, leaving 4--5 free parameters -- still plenty of room for a generic slice.
+
+\subsection{Why the Gram constraint is still automatic}
+
+Nothing here touches Proposition~\ref{prop:gram}. The eight constituents $q_k(t)$ are still
+honest null bispinors for every $t$ (only $\lam$'s moved), and \eqref{eq:momcons} (now an
+eight-term sum) still enforces momentum conservation exactly for every $t$. So
+$p_1(t),\dots,p_4(t), p_5(t){=}q_{5a}(t){+}q_{5b}(t), p_6(t)$ remain six genuine 4D momenta
+summing to zero for every $t$, regardless of what $m_t^2(t)$ does -- the Gram determinant
+of any five of them vanishes identically, for exactly the same linear-algebra reason as in the
+massless case. Masses never entered Proposition~\ref{prop:gram}'s proof, so they cannot break it
+here either.
+
+\subsection{Worked example: extending the hexagon to $t\bar t b\bar b$-type kinematics}
+
+Keep legs 1,2 as before, and replace legs 3--6 by: a free leg 3, a completed leg 4, and two
+massive legs 5,6 with $m_t^2=4$, each split into null constituents. Choosing
+\begin{equation}
+\begin{aligned}
+\lam_{5a}&=(1,1), & \lt_{5a}&=(1,-1), &\quad \lam_{5b}&=(1,2), & \lt_{5b}&=(1,-5),\\
+\lam_{6a}&=(1,-1), & \lt_{6a}&=(1,1), &\quad \lam_{6b}&=(2,1), & \lt_{6b}&=\big(1,-\tfrac13\big),
+\end{aligned}
+\end{equation}
+one checks $\ang{5a}{5b}\sq{5b}{5a}=\ang{6a}{6b}\sq{6b}{6a}=4=m_t^2$, exactly as designed. The
+same ``last-two-legs'' completion (Remark~\ref{rem:completion}) then fixes
+$\lam_3=(1,1),\ \lt_3=(1,\tfrac{154}{3})$ and $\lam_4=(-7,-6),\ \lt_4=(1,\tfrac{20}{3})$ so that
+overall momentum conservation holds exactly. At this base point one finds, directly from the
+definitions,
+\begin{equation}
+m_t^2 = 4,\quad s_{12}=1,\ s_{23}=\tfrac{305}{3},\ s_{34}=\tfrac{134}{3},\ s_{45}=-97,\
+s_{56}=\tfrac{134}{3},\ s_{16}=\tfrac{16}{3},\ s_{123}=\tfrac{157}{3},\ s_{234}=60,\ s_{345}=4,
+\end{equation}
+and, as required, $G(p_1,p_2,p_3,p_4,p_5)=0$ (the fractions are just an artifact of the small
+integers chosen for the constituent spinors; nothing here needs them to be especially pretty).
+
+Choosing $\eta=(1,-1)$ and the ``shared running mass'' option, solving the resulting $3\times3$
+linear system (after freely fixing $c_1=c_4=c_{5a}=1,\,c_2=c_3=0$, then clearing a common
+denominator of $22$) gives
+\begin{equation}
+(c_1,c_2,c_3,c_4,c_{5a},c_{5b},c_{6a},c_{6b}) = (22,\,0,\,0,\,22,\,22,\,35,\,-4,\,-97).
+\end{equation}
+Evaluating every invariant along this shift gives, exactly:
+\begin{equation}
+\begin{alignedat}{2}
+m_t^2(t) &= 4-16t \ (=\, p_6^2(t)\ \text{as well}), &\qquad
+s_{12}(t) &= 1+22t,\\
+s_{23}(t) &= \tfrac{305}{3}\ (\text{const.}), &\qquad
+s_{34}(t) &= \tfrac{134}{3}-\tfrac{5896}{3}t,\\
+s_{45}(t) &= -97+\tfrac{25777}{3}t, &\qquad
+s_{56}(t) &= \tfrac{134}{3}-\tfrac{6424}{3}t,\\
+s_{16}(t) &= \tfrac{16}{3}+\tfrac{604}{3}t, &\qquad
+s_{123}(t) &= \tfrac{157}{3}-\tfrac{6578}{3}t,\\
+s_{234}(t) &= 60-1694t, &\qquad
+s_{345}(t) &= 4+381t,
+\end{alignedat}
+\end{equation}
+and again $G(p_1(t),p_2(t),p_3(t),p_4(t),p_5(t)) \equiv 0$. (Here $s_{23}$ happens to be constant
+only because we deliberately set $c_2=c_3=0$ to keep the arithmetic short; for a random choice of
+free parameters every invariant, $m_t^2$ included, has a nonzero slope.) Every invariant,
+\emph{including the mass}, is exactly degree one in $t$, and the Gram constraint was never solved
+-- only ever a consequence of using genuine on-shell, momentum-conserving spinor data.
+
+\section{Summary: massless versus massive}
+
+\begin{center}
+\begin{tabular}{@{}p{0.34\linewidth}p{0.3\linewidth}p{0.3\linewidth}@{}}
+\toprule
+ & \textbf{Massless (\S\ref{sec:masslessexample})} & \textbf{Massive (this note)} \\
+\midrule
+Lines shifted & $n$ external legs & $n_{\text{massless}}$ external legs $+$ 2 null constituents per massive leg \\
+Momentum conservation & 1 linear constraint on $c_i$ (\eqref{eq:momcons}) & same, just more terms \\
+Mass control & --- & 1 extra linear constraint per fixed mass, or 1 shared constraint to let a tied mass run \\
+Invariant linearity in $t$ & automatic (bracket identity) & automatic, by the same identity, now including $m_t^2$ itself \\
+Gram constraint & automatic (Prop.~\ref{prop:gram}) & automatic, unchanged -- masses never enter the proof \\
+Square roots & none & none \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+In short: nothing about the core argument changes. The only new step is representing each
+massive leg as a sum of two null constituents (equivalently: using genuine massive
+little-group spinors) so that its mass becomes just another spinor bracket -- at which point it
+is controlled by exactly the same kind of single linear equation used everywhere else in the
+construction. This is precisely what \texttt{MassiveBCFWSlice.wl} implements, with
+finite-field arithmetic in place of exact rationals and a free toggle (\texttt{FixMasses}) between
+the two mass-handling options above.
+
+\begin{thebibliography}{9}
+\bibitem{Abreu2412} S.~Abreu, P.~F.~Monni, B.~Page, J.~Usovitsch,
+\emph{Planar Six-Point Feynman Integrals for Four-Dimensional Gauge Theories},
+\href{https://arxiv.org/abs/2412.19884}{arXiv:2412.19884}.
+\bibitem{Abreu2110} S.~Abreu, F.~Febres~Cordero, H.~Ita, M.~Klinkert, B.~Page, V.~Sotnikov,
+\emph{Leading-Color Two-Loop Amplitudes for Four Partons and a $W$ Boson in QCD},
+JHEP \textbf{04} (2022) 042, \href{https://arxiv.org/abs/2110.07541}{arXiv:2110.07541}.
+\bibitem{ttW} M.~Becchetti et al., \emph{Two-loop QCD amplitudes for $t\bar t W$ production at the
+LHC in the leading-colour approximation}, \href{https://arxiv.org/abs/2608.03746}{arXiv:2608.03746}.
+\end{thebibliography}
+
+\end{document}

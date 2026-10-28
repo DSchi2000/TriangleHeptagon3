@@ -272,10 +272,10 @@ diffOp=getDifferentialOperator[tPoint];
 
 ExtraRelations={};
 ReducedInts=DeleteDuplicates[Cases[reductionRules,_HPT3,Infinity]];
-If [Length[Complement[ExtraRelationIntList,ReducedInts]]==2,
+If [DoExtraRelations,
 	ExtraRelations=GetExtraRelationReplacements[reductionRules,tPoint];
 ];
-ExtraRelations//Echo;
+(*ExtraRelations//Echo;*)
 PureIntegralN2=Expand[PureIntegralN/.reductionRules,Modulus->$P];
 PureIntegralN3=Expand[PureIntegralN2/.ExtraRelations,Modulus->$P];
 

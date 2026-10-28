@@ -25,7 +25,7 @@ invariants=Variables[mandrepls[[All,2]]]
 
 vecs={p[6],p[2],p[3],p[4],p[5]};
 G6=Together[16*Det[Table[Expand[vec1 vec2/.p4cons]/.kinematics/.mandrepls,{vec1,vecs},{vec2,vecs}]]];
-Export[NotebookDirectory[]<>"SixPointGram.txt",mandrepls];
+Export[NotebookDirectory[]<>"SixPointGram.txt",G6];
 $P=2^31-1
 tpoint=Thread[Rule[DeleteElements[invariants,{s16}],RandomInteger[$P,9]]];
 tpoint=Sort[Join[tpoint,{Solve[Expand[G6/.tpoint,Modulus->$P]==0,s16,Modulus->$P][[1,1]]}]]
