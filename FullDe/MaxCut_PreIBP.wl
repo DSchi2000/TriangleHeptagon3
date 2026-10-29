@@ -81,6 +81,7 @@ WriteJobFile[{"UReduList","ReduList","ExtraRelationsReduList"}]
 DeleteOldKiraRun[];
 tpointlist={};
 (*tpoint=GetRandomPT[0,$P];*)
+tPoint={mt2->1867986130,s12->400105616,s123->1077685476,s16->1404758163,s23->1154837077,s234->1712394270,s34->934781953,s345->1748259880,s45->661755111,s56->1091626529}
 Monitor[For[Npos=1,Npos<=20,Npos++,
 tPoint[[1,2]]=RandomInteger[$P];
 tpointlist=Join[tpointlist,{tPoint[[All,2]]}];
