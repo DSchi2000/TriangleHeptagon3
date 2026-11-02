@@ -1,5 +1,8 @@
 # !/bin/bash
-python3 SplitNumericalOutput.py -i './results//HPT3/numerics_2147483647_0.m' -o './splitres'
+# python3 SplitNumericalOutput.py -i './results//HPT3/numerics_2147483647_0.m' -o './splitres'
+
+python3 SplitNumericalOutputParallel.py -i './results//HPT3/numerics_2147483647_0.m' -o './splitres' -j 8
+
 # if [ -e ./results/hxb/numerics_2147483647_1.m ]
 # then
 #     python3 SplitNumericalOutput.py -i './results/hxb/numerics_2147483647_1.m' -o './splitres'
