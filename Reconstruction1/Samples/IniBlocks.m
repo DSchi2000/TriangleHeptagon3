@@ -4,14 +4,14 @@
 (*Settings*)
 
 
-NSamples=500;
+NSamples=10000;
 AuxVar=s16;
 $P=2^31-1;
 (*OutPutPath="Samples-1";*)
-OutPutPath="Full-Samples-500";
+OutPutPath="Full-Samples-10000";
 SliceVar=s16;
-NParrallel=5;
-KIRACores=5;
+NParrallel=50;
+KIRACores=50;
 EpsRecoLenth=1;
 MaxCutInts=Range[95];
 reset=True;
