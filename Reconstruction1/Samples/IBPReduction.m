@@ -24,7 +24,7 @@ kirabinpathlanayru="/home/daniel/Documents/packages/kira/bin"
 
 SetDirectory[FileNameJoin[{kirapath,"KIRA"}]];
 runtime=AbsoluteTiming[Run[ToString[StringForm["``/bin/kira --parallel=`` jobs.yaml",kirabinpathlanayru,KIRACores]]];
-			   Run["python3 SplitNumericalOutput.py -i './results/HPT3/numerics_2147483647_0.m' -o './splitres'"];];
+			   Run["python3 SplitNumericalOutputPrallel.py -i './results/HPT3/numerics_2147483647_0.m' -o './splitres' -j "<>ToString[NParrallel]];];
 
 
 SetDirectory[CurrentDir];
