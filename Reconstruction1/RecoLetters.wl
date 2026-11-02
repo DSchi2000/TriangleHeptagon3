@@ -86,7 +86,6 @@ ChangeAuxVarInDe[s16,s12,DIsij,tpoint]
 
 
 Nterms
-AnsatzPowers[[evenpos]]
 
 
 (* ::Section:: *)
@@ -97,22 +96,30 @@ DIsij=Table[Insert[Map[LinearTerm[#][[psp,1,pos]]&,usedvars],0,4],{psp,1,Length[
 DIsij=Table[Coefficient[ChangeAuxVarInDe[s16,s12,DIsij[[psp]],PhaseSpacePoints[[psp]]],Table[ds[var],{var,diffInvariants}]],{psp,1,Length[PhaseSpacePoints]}];
 
 
-var=s123;
-vars=VarGrid[[50,35]]
+var=s16;
+setup=AnsatzPowers[[Flatten[Position[Nterms[[All,1]],{88,88}]]//First]]
+Nterms[[Flatten[Position[Nterms[[All,1]],{88,88}]]//First]]
+
+
+vars=VarGrid[[setup[[1,1]],setup[[1,2]]]]
+setup[[2]]
+setup[[3]]
 
 fitvec=DIsij[[All,First[Flatten[Position[diffInvariants,var]]]]];
 
-testpos=Flatten[Position[FactorsWithPositions[[All,1]],{50,35}]]//First
+testpos=Flatten[Position[FactorsWithPositions[[All,1]],setup[[1,1]]]]//First
 FactorsWithPositions2[[testpos]]
 evenpos=FactorsWithPositions2[[testpos]][[1]];
 DtIntegrands[[evenpos]]
 Expand[DtIntegrands[[evenpos]],Modulus->$P]
 dlogList[[evenpos]]
 logRational=dlogList[[evenpos]]/.n_ Log[x_]:>n/.Log[x_]:>1
+logRational Log[FactorsWithPositions2[[testpos]][[2]]/.Fac[n_]:>EvenLetterCandidatesFACS[[n]]]
+
 DlogDiff=Factor[Expand[logRational  D[Log[FactorsWithPositions2[[testpos]][[2]]/.Fac[n_]:>EvenLetterCandidatesFACS[[n]]],var]],Modulus->$P]
 fitvec=Expand[fitvec-(DlogDiff/.PhaseSpacePoints),Modulus->$P];
 Get[ToString[StringJoin[HomeDir,"/files/ExtraRecoModules.m"]]];
-Reco=ReconstructFUNCS[fitvec,PhaseSpacePoints[[All,Flatten[Map[Position[diffInvariants,#]&,vars]],2]],vars,4,5,Debug->True]
+Reco=ReconstructFUNCS[fitvec,PhaseSpacePoints[[All,Flatten[Map[Position[diffInvariants,#]&,vars]],2]],vars,setup[[2]],setup[[3]],Debug->True]
 Ansatz=Reco[[2]];
 ReconstructedFunc=Together[Ansatz/.Thread[Rule[Sort[Cases[Ansatz,_fac,Infinity]],Reco[[1,1]]]]/.n_Integer:>RationalReconstruct[n]]
 
@@ -125,7 +132,8 @@ Get["/home/daniel/Documents/packages/trager/Trager.wl"]
 (*Get["/home/dschiebe/Documents/packages/trager/Trager.wl"]*)
 
 
-TragerLogSubtraction[ReconstructedFunc,var,Debug->True]
+Dlog=TragerLogSubtraction[ReconstructedFunc,var,Debug->True]
+Factor[Cases[{Dlog},_Log,Infinity]/.Log[x_]:>x]
 
 
 (* ::Section:: *)
