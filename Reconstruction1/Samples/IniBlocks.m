@@ -4,20 +4,20 @@
 (*Settings*)
 
 
-NSamples=200;
+NSamples=500;
 AuxVar=s16;
 $P=2^31-1;
 (*OutPutPath="Samples-1";*)
-OutPutPath="Univariate Slice";
+OutPutPath="Full-Samples-500";
 SliceVar=s16;
-NParrallel=20;
-KIRACores=20;
+NParrallel=5;
+KIRACores=5;
 EpsRecoLenth=1;
 MaxCutInts=Range[95];
 reset=True;
 printOut=True;
 AllSectors=True;
-SampleMode="UVar"; (*Slice,UVar,Full*)
+SampleMode="Full"; (*Slice,UVar,Full*)
 SubdVars={mt2,s12,s123,s23,s234,s34,s345,s45,s56};
 DoExtraRelations=True;
 

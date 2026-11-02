@@ -100,8 +100,16 @@ Export[ToString[StringForm["``/``/tvars.txt",CurrentDir,OutPutPath]],tvars];
 
 
 ];
-If[SampleMode=="Full",Print["3"]];]
+If[SampleMode=="Full",Print["3"]];
+Print["Sampling Mode Full Sampling!"];
 
+Command=PointGeneratorPath<>"/gen_6pt --roots "<>SectorDir<>"/Roots.txt --gram "<>GramDir<>"/SixPointGram.txt --npoints "<>ToString[NSamples]<>" --auxvar "<>ToString[s16]<>" --out points.txt --threads "<>ToString[NParrallel];
+Run[Command];
+PTS=Import[CurrentDir<>"/points.txt","Table"];
+PTS = Select[PTS, !StringStartsQ[ToString[#[[1]]], "#"] &][[All,;;-1]];
+PTSRPL=Map[Thread[Rule[invariants,#]]&,PTS[[All,;;-1]]];
+tpointlist=ParallelTable[ GetTouple[EpsRecoLenth,PTSRPL[[i]]],{i,1,NSamples}];
+]
 tpointlist=Flatten[tpointlist,1][[All]];
 Export[ToString[StringForm["``/``/phasespacepoints.txt",CurrentDir,OutPutPath]],tpointlist[[All,All,2]]];
 
