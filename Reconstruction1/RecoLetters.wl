@@ -85,41 +85,52 @@ tpoint=PhaseSpacePoints[[1]]
 ChangeAuxVarInDe[s16,s12,DIsij,tpoint]
 
 
+
+
+
 Nterms
+
+
+FrobeniusSolve[{1,1,1,1,1,1,1},3]//Length
+FrobeniusSolve[{1,1,1,1,1,1,1},4]//Length
 
 
 (* ::Section:: *)
 (*Recontruct 1*)
 
 
+pos1=88;
+pos2=88;
+pos=GetLinPos[pos1,pos2,95];
 DIsij=Table[Insert[Map[LinearTerm[#][[psp,1,pos]]&,usedvars],0,4],{psp,1,Length[PhaseSpacePoints]}];
 DIsij=Table[Coefficient[ChangeAuxVarInDe[s16,s12,DIsij[[psp]],PhaseSpacePoints[[psp]]],Table[ds[var],{var,diffInvariants}]],{psp,1,Length[PhaseSpacePoints]}];
 
+setup=AnsatzPowers[[Flatten[Position[Nterms[[All,1]],{pos1,pos2}]]//First]]
+Nterms[[Flatten[Position[Nterms[[All,1]],{pos1,pos2}]]//First]]
+vars=VarGrid[[setup[[1,1]],setup[[1,2]]]]//Sort
+(*vars={s16,mt2}*)
 
-var=s16;
-setup=AnsatzPowers[[Flatten[Position[Nterms[[All,1]],{88,88}]]//First]]
-Nterms[[Flatten[Position[Nterms[[All,1]],{88,88}]]//First]]
 
-
-vars=VarGrid[[setup[[1,1]],setup[[1,2]]]]
+var=mt2;
 setup[[2]]
 setup[[3]]
 
 fitvec=DIsij[[All,First[Flatten[Position[diffInvariants,var]]]]];
 
-testpos=Flatten[Position[FactorsWithPositions[[All,1]],setup[[1,1]]]]//First
+testpos=Flatten[Position[FactorsWithPositions[[All,1]],setup[[1]]]]//First
 FactorsWithPositions2[[testpos]]
 evenpos=FactorsWithPositions2[[testpos]][[1]];
+
+
 DtIntegrands[[evenpos]]
 Expand[DtIntegrands[[evenpos]],Modulus->$P]
 dlogList[[evenpos]]
 logRational=dlogList[[evenpos]]/.n_ Log[x_]:>n/.Log[x_]:>1
 logRational Log[FactorsWithPositions2[[testpos]][[2]]/.Fac[n_]:>EvenLetterCandidatesFACS[[n]]]
-
 DlogDiff=Factor[Expand[logRational  D[Log[FactorsWithPositions2[[testpos]][[2]]/.Fac[n_]:>EvenLetterCandidatesFACS[[n]]],var]],Modulus->$P]
 fitvec=Expand[fitvec-(DlogDiff/.PhaseSpacePoints),Modulus->$P];
 Get[ToString[StringJoin[HomeDir,"/files/ExtraRecoModules.m"]]];
-Reco=ReconstructFUNCS[fitvec,PhaseSpacePoints[[All,Flatten[Map[Position[diffInvariants,#]&,vars]],2]],vars,setup[[2]],setup[[3]],Debug->True]
+Reco=ReconstructFUNCS[fitvec,PhaseSpacePoints[[All,Flatten[Map[Position[diffInvariants,#]&,vars]],2]],vars,3,4,Debug->False];
 Ansatz=Reco[[2]];
 ReconstructedFunc=Together[Ansatz/.Thread[Rule[Sort[Cases[Ansatz,_fac,Infinity]],Reco[[1,1]]]]/.n_Integer:>RationalReconstruct[n]]
 
@@ -128,59 +139,66 @@ ReconstructedFunc=Together[Ansatz/.Thread[Rule[Sort[Cases[Ansatz,_fac,Infinity]]
 (*Integrate*)
 
 
-Get["/home/daniel/Documents/packages/trager/Trager.wl"]
-(*Get["/home/dschiebe/Documents/packages/trager/Trager.wl"]*)
-
-
-Dlog=TragerLogSubtraction[ReconstructedFunc,var,Debug->True]
+(*Get["/home/daniel/Documents/packages/trager/Trager.wl"]*)
+Get["/home/dschiebe/Documents/packages/trager/Trager.wl"]
+Dlog=TragerLogSubtraction[ReconstructedFunc,var,Parallelize->True,Debug->True]
 Factor[Cases[{Dlog},_Log,Infinity]/.Log[x_]:>x]
 
 
 (* ::Section:: *)
-(*Residual Power Funcs*)
+(*Automation*)
 
 
-GetResidualPowers[matpos_]:=Module[{testpos,evenpos,logRational,DlogDiff,NewRecoFunc,NumPow,DenPow},
-testpos=Flatten[Position[FactorsWithPositions[[All,1]],matpos]]//First;
+CloseKernels[];
+kernels=LaunchKernels[20];
+
+
+Get[ToString[StringJoin[HomeDir,"/files/ExtraRecoModules.m"]]];
+Get["/home/dschiebe/Documents/packages/trager/Trager.wl"]
+GetNumberOfTermsNeeded[n_,num_,den_]:=Binomial[n + num-1, n-1]+Binomial[n + den-1, n-1]
+
+
+GetDLogs[pos1_,pos2_]:=Module[{pos,DIsij,setup,vars,newauxvar,fitvec,testpos,evenpos,logRational,DlogDiff,Reco,Ansatz,ReconstructedFunc,Dlog,Dlogs},
+pos=GetLinPos[pos1,pos2,95];
+
+setup=AnsatzPowers[[Flatten[Position[Nterms[[All,1]],{pos1,pos2}]]//First]];
+vars=VarGrid[[setup[[1,1]],setup[[1,2]]]]//Sort;
+
+If[ Length[vars]===10,newauxvar=s16;,
+newauxvar=Last[Complement[diffInvariants,vars]];
+];
+
+DIsij=Table[Insert[Map[LinearTerm[#][[psp,1,pos]]&,usedvars],0,4],{psp,1,Length[PhaseSpacePoints]}];
+DIsij=Table[Coefficient[ChangeAuxVarInDe[s16,newauxvar,DIsij[[psp]],PhaseSpacePoints[[psp]]],Table[ds[var],{var,diffInvariants}]],{psp,1,Length[PhaseSpacePoints]}];
+
+Dlogs=Table[
+fitvec=DIsij[[All,First[Flatten[Position[diffInvariants,dvar]]]]];
+
+testpos=Flatten[Position[FactorsWithPositions[[All,1]],setup[[1]]]]//First;
 evenpos=FactorsWithPositions2[[testpos]][[1]];
-logRational=dlogList[[evenpos]]/.n_ Log[x_]:>n/.Log[x_]:>1;
-DlogDiff=Factor[Expand[logRational  D[Log[FactorsWithPositions2[[testpos]][[2]]/.Fac[n_]:>EvenLetterCandidatesFACS[[n]]/.SliceTpoint],t]]/.SliceTpoint,Modulus->$P];
-NewRecoFunc=Factor[DtIntegrands[[evenpos]]-DlogDiff,Modulus->$P];
-NumPow=Exponent[Numerator[NewRecoFunc],t];
-DenPow=Exponent[Denominator[NewRecoFunc],t];
-Return[{matpos,NumPow,DenPow}]
 
+
+
+logRational=dlogList[[evenpos]]/.n_ Log[x_]:>n/.Log[x_]:>1;
+DlogDiff=Factor[Expand[logRational  D[Log[FactorsWithPositions2[[testpos]][[2]]/.Fac[n_]:>EvenLetterCandidatesFACS[[n]]],dvar]],Modulus->$P];
+fitvec=Expand[fitvec-(DlogDiff/.PhaseSpacePoints),Modulus->$P];
+
+Reco=ReconstructFUNCS[fitvec,PhaseSpacePoints[[All,Flatten[Map[Position[diffInvariants,#]&,vars]],2]],vars,setup[[2]],setup[[3]],Debug->False];
+Ansatz=Reco[[2]];
+ReconstructedFunc=Together[Ansatz/.Thread[Rule[Sort[Cases[Ansatz,_fac,Infinity]],Reco[[1,1]]]]/.n_Integer:>RationalReconstruct[n]];
+(*ReconstructedFunc//Echo;*)
+TragerLogSubtraction[ReconstructedFunc,dvar,Parallelize->True,Debug->False],{dvar,vars}];
+Return[Dlogs/.Log[x_]:>Log[Factor[x]]];
 ]
 
 
-(* ::Section:: *)
-(*Get Remaining Powers:*)
 
 
-GetNumberOfTermsNeeded[n_,num_,den_]:=Binomial[n + num, n]+Binomial[n + den, n]
-RecoPowers=Map[GetResidualPowers[#]&,Complement[FactorsWithPositions[[All,1]],SolvedAlready]]
-
-NAnsaetze=Table[{RecoPowers[[i,1]],GetNumberOfTermsNeeded[Length[VarGrid[[RecoPowers[[i,1,1]],RecoPowers[[i,1,2]]]]],RecoPowers[[i,2]],RecoPowers[[i,3]]]},{i,1,Length[RecoPowers]}]
-
-
-(* ::Section:: *)
-(*BackUp*)
-
-
-AnsatzPowers[[1]]
-
-
-testpos=Flatten[Position[FactorsWithPositions[[All,1]],{5,4}]]//First
-FactorsWithPositions2[[testpos]]
-evenpos=FactorsWithPositions2[[testpos]][[1]];
-DtIntegrands[[evenpos]]
-Expand[DtIntegrands[[evenpos]],Modulus->$P]
-dlogList[[evenpos]]
-logRational=dlogList[[evenpos]]/.n_ Log[x_]:>n/.Log[x_]:>1
-DlogDiff=Factor[Expand[logRational  D[Log[FactorsWithPositions2[[testpos]][[2]]/.Fac[n_]:>EvenLetterCandidatesFACS[[n]]/.SliceTpoint],t]]/.SliceTpoint,Modulus->$P]
-NewRecoFunc=Factor[DtIntegrands[[evenpos]]-DlogDiff,Modulus->$P];
-NumPow=Exponent[Numerator[NewRecoFunc],t]
-DenPow=Exponent[Denominator[NewRecoFunc],t]
-
-
-
+Monitor[NewDLogs=Table[
+matpos=AnsatzPowers[[it1,1]];
+setup=AnsatzPowers[[Flatten[Position[Nterms[[All,1]],{matpos[[1]],matpos[[2]]}]]//First]];
+vars=VarGrid[[matpos[[1]],matpos[[2]]]]//Sort;
+If[GetNumberOfTermsNeeded[Length[vars],setup[[2]],setup[[3]]]<=500,
+GetDLogs[matpos[[1]],matpos[[2]]],0],
+{it1,1,Length[AnsatzPowers[[All,1]]]}],{ProgressIndicator[it1,{1,Length[AnsatzPowers[[All,1]]]}],AnsatzPowers[[it1,1]]}];
+Export[CurrentDir<>"NewDlogs-500.txt",NewDLogs]

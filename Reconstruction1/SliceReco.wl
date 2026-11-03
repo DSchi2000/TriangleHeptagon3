@@ -107,7 +107,7 @@ tpoint=PhaseSpacePoints[[1,;;-2]]
 ChangeAuxVarInDe[s16,s12,DIsij,tpoint]
 
 
-(* ::Section:: *)
+(* ::Section::Closed:: *)
 (*Reconstruction*)
 
 
@@ -158,6 +158,7 @@ DLogs[position]=TragerLogSubtractionNumeric[NewIntDt,t,{},{},Modulus->$P];
 
 
 dlogList=Table[DLogs[position],{position,1,Length[LinearizedEvenPos]}]
+Export[CurrentDir<>"dlogs.txt",dlogList]
 IntegrandsSlice=Table[dtIntegrands[position],{position,1,Length[LinearizedEvenPos]}]
 
 
@@ -229,6 +230,9 @@ NewFunc=Factor[SlicedLetters[[i]]/FoundFactors[[i]]/.Fac[n_]:>ELSclice[[n]],Modu
 {Exponent[Numerator[NewFunc],t],Exponent[Denominator[NewFunc],t]},{i,1,Length[SlicedLetters]}]
 
 
+
+
+
 FullreResolved=Flatten[Position[Exponents,{0,0}]]
 ResolvedEvenLettersPos=Map[DeleteElements[Table[If[Log[#]===(dlogList[[i]]/.n_ Log[x_]:>Log[x]),i,0],{i,1,Length[dlogList]}],{0}]&,SlicedLetters[[FullreResolved]]]
 UsedLetters=DeleteDuplicates[Cases[FoundFactors[[FullreResolved]],_Fac,Infinity]]/.Fac[n_]:>EvenLetterCandidatesFACS[[n]]
@@ -247,11 +251,42 @@ EvenPos//Length
 
 
 AllEvenLettersPos=Map[DeleteElements[Table[If[Log[#]===(dlogList[[i]]/.n_ Log[x_]:>Log[x]),i,0],{i,1,Length[dlogList]}],{0}]&,SlicedLetters]
-FactorsWithPositions=Flatten[Table[Table[{pos,FoundFactors[[i]]},{pos,AllEvenLettersPos[[i]]}] ,{i,1,Length[AllEvenLettersPos]}],1];
+FactorsWithPositions=Flatten[Table[Table[{EvenPos[[pos]],FoundFactors[[i]]},{pos,AllEvenLettersPos[[i]]}] ,{i,1,Length[AllEvenLettersPos]}],1];
+FactorsWithPositions2=Flatten[Table[Table[{pos,FoundFactors[[i]]},{pos,AllEvenLettersPos[[i]]}] ,{i,1,Length[AllEvenLettersPos]}],1];
 
 Export[CurrentDir<>"Factors.txt",EvenLetterCandidatesFACS]
 Export[CurrentDir<>"EvenLetterPos.txt",FactorsWithPositions]
+Export[CurrentDir<>"EvenLetterPos2.txt",FactorsWithPositions2]
 
 
 
 
+
+
+dlogList[[6]]/.Log[x_]:>Log[Factor[x,Modulus->$P]]
+
+
+CheckLetterFactor[SlicedLetters[[170]],2]
+CheckLetterFactor[SlicedLetters[[170]],10]
+
+
+FoundFactors[[170]]
+Exponents[[170]]
+FactorsWithPositions2[[194]]
+FactorsWithPositions[[194]]
+
+
+FactorsWithPositions2=Table[Table[{pos,FoundFactors[[i]]},{pos,AllEvenLettersPos[[i]]}] ,{i,1,Length[AllEvenLettersPos]}];
+FactorsWithPositions2[[170]]
+
+
+FactorsWithPositions2[[170]]
+
+
+SortBy[Flatten[FactorsWithPositions2,1],First][[194]]
+
+
+Integrand=(381209005+862141502 t+649333794 t^2+560077290 t^3+91831431 t^4+514554572 t^5+1142264796 t^6+515414593 t^7+899128822 t^8+947335993 t^9)/(765299706+762305862 t+1656502159 t^2+139249457 t^3+1621683602 t^4+1992736910 t^5+976544736 t^6+1651639918 t^7+72869297 t^8+792053664 t^9+1159475132 t^10+t^11);
+
+
+TragerLogSubtractionNumeric[Integrand,t,{},{},Modulus->$P]

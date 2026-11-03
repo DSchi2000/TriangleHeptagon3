@@ -12,6 +12,7 @@ PureIntegrals=ReadList[FileNameJoin[{SectorDir,"SubBasis.txt"}]];
 (*PureIntegrals[[;;52]]=ConstantArray[0,52];*)
 SetDirectory[CurrentDir];
 NotbookDir=NotebookDirectory[];
+Get[FileNameJoin[{HomeDir,"files/HexaBoxModules.m"}]];
 Get[FileNameJoin[{HomeDir,"files/ExtraFunctions.m"}]];
 SQRTS=Cases[PureIntegrals,_root,Infinity]//DeleteDuplicates;
 (*SQRTPOWS=Map[Exponent[#,SQRTS]&,PureIntegrals];
@@ -46,12 +47,15 @@ FactorsWithPositions2=ReadList[CurrentDir<>"EvenLetterPos2.txt"];
 EvenLetterCandidatesFACS=ReadList[CurrentDir<>"Factors.txt"];
 DtIntegrands=ReadList[CurrentDir<>"EvenIntegrands.txt"];
 dlogList=ReadList[CurrentDir<>"dlogs.txt"];
+ABVEC=ReadList[CurrentDir<>"/Samples/AVECS.txt"];
+avec=ABVEC[[1]]
+bvec=ABVEC[[2]]
+SliceTpoint=Thread[Rule[bvec[[All,1]],avec[[All,2]]+t bvec[[All,2]]]];
 
 
 
 (* ::Section:: *)
 (*Residual Power Funcs*)
-
 
 
 GetResidualPowers[matpos_]:=Module[{testpos,evenpos,logRational,DlogDiff,NewRecoFunc,NumPow,DenPow},
@@ -67,7 +71,20 @@ Return[{matpos,NumPow,DenPow}]
 ]
 
 
-(* ::Section:: *)
+GetResidualPowers[matpos_,var_]:=Module[{testpos,evenpos,logRational,DlogDiff,NewRecoFunc,NumPow,DenPow},
+testpos=Flatten[Position[FactorsWithPositions[[All,1]],matpos]]//First;
+evenpos=FactorsWithPositions2[[testpos]][[1]];
+logRational=dlogList[[evenpos]]/.n_ Log[x_]:>n/.Log[x_]:>1;
+DlogDiff=Factor[Expand[logRational  D[Log[FactorsWithPositions2[[testpos]][[2]]/.Fac[n_]:>EvenLetterCandidatesFACS[[n]]],var]]/.SliceTpoint,Modulus->$P];
+NewRecoFunc=Factor[DtIntegrands[[evenpos]]-DlogDiff,Modulus->$P];
+NumPow=Exponent[Numerator[NewRecoFunc],t];
+DenPow=Exponent[Denominator[NewRecoFunc],t];
+Return[{matpos,NumPow,DenPow}]
+
+]
+
+
+(* ::Section::Closed:: *)
 (*GetVariablesOfIntegral*)
 
 
@@ -102,21 +119,36 @@ HPT3Momenta[powers_List] := Module[
 
 Sectors=Map[Last[Sort[DeleteDuplicates[Cases[#,_HPT3,Infinity]/.{n_Integer/;n<0:>0,n_Integer/;n>1:>1}]]]&,PureIntegrals];
 MomentaConfigurations=Map[HPT3Momenta[#]&,Sectors];
-VariableIntegrals=Map[Variables[Det[Table[2Expand[ vec1 vec2/.p4cons]/.mandelstamScalarProducts/.kinematics,{vec1,#[[;;-2]]},{vec2,#[[;;-2]]}]]]&,MomentaConfigurations]
+VariableIntegrals=Map[ DeleteDuplicates[If[Length[Position[Sort[#][[;;-2]],p[5]]]===1,Join[{mt2},Variables[Det[Table[2Expand[ vec1 vec2/.p4cons]/.mandelstamScalarProducts/.kinematics,{vec1,#[[;;-2]]},{vec2,#[[;;-2]]}]]]],Variables[Det[Table[2Expand[ vec1 vec2/.p4cons]/.mandelstamScalarProducts/.kinematics,{vec1,#[[;;-2]]},{vec2,#[[;;-2]]}]]]]]&,MomentaConfigurations]
 VarGrid=Table[DeleteDuplicates[Join[vars1,vars2]],{vars1,VariableIntegrals},{vars2,VariableIntegrals}];
 
 
-|
+
+
+
+Sort[MomentaConfigurations[[-1]]][[;;-2]]
+Length[Position[Sort[MomentaConfigurations[[-1]]][[;;-2]],p[5]]]===0
+
+
+
 
 
 (* ::Section:: *)
 (*Get Remaining Powers:*)
 
 
+GetResidualPowers[{60,5},mt2]
+
+
 GetNumberOfTermsNeeded[n_,num_,den_]:=Binomial[n + num, n]+Binomial[n + den, n]
 RecoPowers=Map[GetResidualPowers[#]&,Complement[FactorsWithPositions[[All,1]],SolvedAlready]]
 
 NAnsaetze=Table[{RecoPowers[[i,1]],GetNumberOfTermsNeeded[Length[VarGrid[[RecoPowers[[i,1,1]],RecoPowers[[i,1,2]]]]],RecoPowers[[i,2]],RecoPowers[[i,3]]]},{i,1,Length[RecoPowers]}]
+
+
+Export[CurrentDir<>"VarGrid.txt",VarGrid]
+(*Export[CurrentDir<>"RemainingPowers.txt",RecoPowers]
+Export[CurrentDir<>"TermsNeededPowers.txt",NAnsaetze]*)
 
 
 (* ::Section:: *)
@@ -134,5 +166,3 @@ DlogDiff=Factor[Expand[logRational  D[Log[FactorsWithPositions2[[testpos]][[2]]/
 NewRecoFunc=Factor[DtIntegrands[[evenpos]]-DlogDiff,Modulus->$P];
 NumPow=Exponent[Numerator[NewRecoFunc],t]
 DenPow=Exponent[Denominator[NewRecoFunc],t]
-
-
