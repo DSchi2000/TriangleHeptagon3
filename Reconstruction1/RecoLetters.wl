@@ -99,8 +99,8 @@ FrobeniusSolve[{1,1,1,1,1,1,1},4]//Length
 (*Recontruct 1*)
 
 
-pos1=88;
-pos2=88;
+pos1=39;
+pos2=34;
 pos=GetLinPos[pos1,pos2,95];
 DIsij=Table[Insert[Map[LinearTerm[#][[psp,1,pos]]&,usedvars],0,4],{psp,1,Length[PhaseSpacePoints]}];
 DIsij=Table[Coefficient[ChangeAuxVarInDe[s16,s12,DIsij[[psp]],PhaseSpacePoints[[psp]]],Table[ds[var],{var,diffInvariants}]],{psp,1,Length[PhaseSpacePoints]}];
@@ -130,7 +130,7 @@ logRational Log[FactorsWithPositions2[[testpos]][[2]]/.Fac[n_]:>EvenLetterCandid
 DlogDiff=Factor[Expand[logRational  D[Log[FactorsWithPositions2[[testpos]][[2]]/.Fac[n_]:>EvenLetterCandidatesFACS[[n]]],var]],Modulus->$P]
 fitvec=Expand[fitvec-(DlogDiff/.PhaseSpacePoints),Modulus->$P];
 Get[ToString[StringJoin[HomeDir,"/files/ExtraRecoModules.m"]]];
-Reco=ReconstructFUNCS[fitvec,PhaseSpacePoints[[All,Flatten[Map[Position[diffInvariants,#]&,vars]],2]],vars,3,4,Debug->False];
+Reco=ReconstructFUNCS[fitvec,PhaseSpacePoints[[All,Flatten[Map[Position[diffInvariants,#]&,vars]],2]],vars,1,2,Debug->False];
 Ansatz=Reco[[2]];
 ReconstructedFunc=Together[Ansatz/.Thread[Rule[Sort[Cases[Ansatz,_fac,Infinity]],Reco[[1,1]]]]/.n_Integer:>RationalReconstruct[n]]
 
@@ -162,6 +162,8 @@ GetDLogs[pos1_,pos2_]:=Module[{pos,DIsij,setup,vars,newauxvar,fitvec,testpos,eve
 pos=GetLinPos[pos1,pos2,95];
 
 setup=AnsatzPowers[[Flatten[Position[Nterms[[All,1]],{pos1,pos2}]]//First]];
+
+If[setup[[2]]-setup[[3]]===-2, setup[[2]]=setup[[2]]+1];
 vars=VarGrid[[setup[[1,1]],setup[[1,2]]]]//Sort;
 
 If[ Length[vars]===10,newauxvar=s16;,
@@ -170,6 +172,7 @@ newauxvar=Last[Complement[diffInvariants,vars]];
 
 DIsij=Table[Insert[Map[LinearTerm[#][[psp,1,pos]]&,usedvars],0,4],{psp,1,Length[PhaseSpacePoints]}];
 DIsij=Table[Coefficient[ChangeAuxVarInDe[s16,newauxvar,DIsij[[psp]],PhaseSpacePoints[[psp]]],Table[ds[var],{var,diffInvariants}]],{psp,1,Length[PhaseSpacePoints]}];
+
 
 Dlogs=Table[
 fitvec=DIsij[[All,First[Flatten[Position[diffInvariants,dvar]]]]];
@@ -193,7 +196,6 @@ Return[Dlogs/.Log[x_]:>Log[Factor[x]]];
 
 
 
-
 Monitor[NewDLogs=Table[
 matpos=AnsatzPowers[[it1,1]];
 setup=AnsatzPowers[[Flatten[Position[Nterms[[All,1]],{matpos[[1]],matpos[[2]]}]]//First]];
@@ -202,3 +204,42 @@ If[GetNumberOfTermsNeeded[Length[vars],setup[[2]],setup[[3]]]<=500,
 GetDLogs[matpos[[1]],matpos[[2]]],0],
 {it1,1,Length[AnsatzPowers[[All,1]]]}],{ProgressIndicator[it1,{1,Length[AnsatzPowers[[All,1]]]}],AnsatzPowers[[it1,1]]}];
 Export[CurrentDir<>"NewDlogs-500.txt",NewDLogs]
+
+
+NewDLogs[[failedEntries]]=NewDLogsFailed
+
+
+(* ::Section:: *)
+(*Problems*)
+
+
+DeleteDuplicates[Position[NewDLogs,$Failed][[All,1]]]
+Export[CurrentDir<>"NewDlogs-500.txt",NewDLogs]
+
+
+failedEntries=DeleteDuplicates[Position[NewDLogs,$Failed][[All,1]]]
+
+
+NewDLogs[[70]]
+
+
+AnsatzPowers[[222]]
+
+
+Flatten[Position[AnsatzPowers[[All,2]]-AnsatzPowers[[All,3]],-2]]
+
+
+
+GetDLogs[80,1]
+
+
+Monitor[NewDLogsFailed=Table[
+matpos=AnsatzPowers[[it1,1]];
+setup=AnsatzPowers[[Flatten[Position[Nterms[[All,1]],{matpos[[1]],matpos[[2]]}]]//First]];
+vars=VarGrid[[matpos[[1]],matpos[[2]]]]//Sort;
+If[GetNumberOfTermsNeeded[Length[vars],setup[[2]],setup[[3]]]<=500,
+GetDLogs[matpos[[1]],matpos[[2]]],0],
+{it1,failedEntries}],{ProgressIndicator[it1,{1,Length[AnsatzPowers[[All,1]]]}],AnsatzPowers[[it1,1]]}];
+
+
+NewDLogsFailed

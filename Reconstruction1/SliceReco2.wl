@@ -41,10 +41,10 @@ LinearTerm[usedvars[[i]]]=ReadList[FileNameJoin[{Directory[],ToString[StringForm
 (*Load More Suff For Dlogging:*)
 
 
-SolvedAlready=ReadList[CurrentDir<>"Solved.txt"];
-FactorsWithPositions=ReadList[CurrentDir<>"EvenLetterPos.txt"];
-FactorsWithPositions2=ReadList[CurrentDir<>"EvenLetterPos2.txt"];
-EvenLetterCandidatesFACS=ReadList[CurrentDir<>"Factors.txt"];
+SolvedAlready=ReadList[CurrentDir<>"Solved-2.txt"];
+FactorsWithPositions=ReadList[CurrentDir<>"EvenLetterPos1-2.txt"];
+FactorsWithPositions2=ReadList[CurrentDir<>"EvenLetterPos2-2.txt"];
+EvenLetterCandidatesFACS=ReadList[CurrentDir<>"Factors-2.txt"];
 DtIntegrands=ReadList[CurrentDir<>"EvenIntegrands.txt"];
 dlogList=ReadList[CurrentDir<>"dlogs.txt"];
 ABVEC=ReadList[CurrentDir<>"/Samples/AVECS.txt"];
@@ -67,21 +67,8 @@ NewRecoFunc=Factor[DtIntegrands[[evenpos]]-DlogDiff,Modulus->$P];
 NumPow=Exponent[Numerator[NewRecoFunc],t];
 DenPow=Exponent[Denominator[NewRecoFunc],t];
 Return[{matpos,NumPow,DenPow}]
-
 ]
 
-
-GetResidualPowers[matpos_,var_]:=Module[{testpos,evenpos,logRational,DlogDiff,NewRecoFunc,NumPow,DenPow},
-testpos=Flatten[Position[FactorsWithPositions[[All,1]],matpos]]//First;
-evenpos=FactorsWithPositions2[[testpos]][[1]];
-logRational=dlogList[[evenpos]]/.n_ Log[x_]:>n/.Log[x_]:>1;
-DlogDiff=Factor[Expand[logRational  D[Log[FactorsWithPositions2[[testpos]][[2]]/.Fac[n_]:>EvenLetterCandidatesFACS[[n]]],var]]/.SliceTpoint,Modulus->$P];
-NewRecoFunc=Factor[DtIntegrands[[evenpos]]-DlogDiff,Modulus->$P];
-NumPow=Exponent[Numerator[NewRecoFunc],t];
-DenPow=Exponent[Denominator[NewRecoFunc],t];
-Return[{matpos,NumPow,DenPow}]
-
-]
 
 
 (* ::Section::Closed:: *)
@@ -126,32 +113,31 @@ VarGrid=Table[DeleteDuplicates[Join[vars1,vars2]],{vars1,VariableIntegrals},{var
 
 
 
-Sort[MomentaConfigurations[[-1]]][[;;-2]]
-Length[Position[Sort[MomentaConfigurations[[-1]]][[;;-2]],p[5]]]===0
-
-
-
-
-
 (* ::Section:: *)
 (*Get Remaining Powers:*)
 
 
-GetResidualPowers[{60,5},mt2]
+Complement[FactorsWithPositions[[All,1]],SolvedAlready]
 
 
-GetNumberOfTermsNeeded[n_,num_,den_]:=Binomial[n + num, n]+Binomial[n + den, n]
+GetResidualPowers[{95,95}]
+
+
+GetNumberOfTermsNeeded[n_,num_,den_]:=Binomial[n + num-1, n]+Binomial[n + den-1, n]
 RecoPowers=Map[GetResidualPowers[#]&,Complement[FactorsWithPositions[[All,1]],SolvedAlready]]
 
 NAnsaetze=Table[{RecoPowers[[i,1]],GetNumberOfTermsNeeded[Length[VarGrid[[RecoPowers[[i,1,1]],RecoPowers[[i,1,2]]]]],RecoPowers[[i,2]],RecoPowers[[i,3]]]},{i,1,Length[RecoPowers]}]
 
 
-Export[CurrentDir<>"VarGrid.txt",VarGrid]
-(*Export[CurrentDir<>"RemainingPowers.txt",RecoPowers]
-Export[CurrentDir<>"TermsNeededPowers.txt",NAnsaetze]*)
+(*Export[CurrentDir<>"VarGrid.txt",VarGrid]*)
+Export[CurrentDir<>"RemainingPowers-2.txt",RecoPowers]
+Export[CurrentDir<>"TermsNeededPowers-2.txt",NAnsaetze]
 
 
-(* ::Section:: *)
+VarGrid[[93,93]]
+
+
+(* ::Section::Closed:: *)
 (*BackUp*)
 
 

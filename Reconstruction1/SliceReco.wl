@@ -70,9 +70,8 @@ Return[AnsatzLength]];
 (*Find Even Letter Pos*)
 
 
-
 rootVector=Map[Times@@DeleteDuplicates[Cases[#,_root,Infinity]]&,PureIntegrals]/.{}->1/.root[x_]:>x;
-DeFoldMat=Normal[Total[Table[ArrayReshape[LinearTerm[var][[1,1]],{Length[PureIntegrals],Length[PureIntegrals]}],{var,invariants2}]]]/.n_Integer/;(n>0):>1;
+DeFoldMat=Normal[Total[Table[ArrayReshape[LinearTerm[var][[1,1]],{Length[PureIntegrals],Length[PureIntegrals]}],{var,usedvars}]]]/.n_Integer/;(n>0):>1;
 
 
 rootVectorN=rootVector/.PhaseSpacePoints[[1]];
@@ -85,19 +84,20 @@ LinearizedEvenPos=Map[GetLinPos[#[[1]],#[[2]],95]&,EvenPos]
 (*Variable Shift Tech*)
 
 
+G6=Get[HomeDir<>"/SetUp/SixPointGram.txt"];
 ChangeAuxVarInDe[varOld_,varNew_,DIsij_,tpoint_]:=Module[{newaux,oldaux,newcoefs,ChangeVarpos,DIsijSUB,newcoefsSUB,posA,posB,EqnConst},
-EqnConst=Sum[(Expand[D[G6,var]/.tpoint,Modulus->$P]) ds[var],{var,invariants}];
+EqnConst=Sum[(Expand[D[G6,var]/.tpoint,Modulus->$P]) ds[var],{var,diffInvariants}];
 
 newaux=First[Solve[EqnConst==0,ds[varNew],Modulus->$P]];
 oldaux=First[Solve[EqnConst==0,ds[varOld],Modulus->$P]];
-newcoefs=Coefficient[newaux[[1,2]],Table[ds[var],{var,invariants2}]];
-ChangeVarpos=Sort[Map[Flatten[Position[invariants2,#]]&,{varOld,varNew}]];
+newcoefs=Coefficient[newaux[[1,2]],Table[ds[var],{var,diffInvariants}]];
+ChangeVarpos=Sort[Map[Flatten[Position[diffInvariants,#]]&,{varOld,varNew}]];
 DIsijSUB=Delete[DIsij,ChangeVarpos];
 newcoefsSUB=Delete[newcoefs,ChangeVarpos];
-posA=First[Flatten[Position[invariants2,varOld]]];
-posB=First[Flatten[Position[invariants2,varNew]]];
+posA=First[Flatten[Position[diffInvariants,varOld]]];
+posB=First[Flatten[Position[diffInvariants,varNew]]];
 
-Return[Expand[(DIsijSUB+newcoefsSUB DIsij[[posB]]),Modulus->$P] . Table[ds[var],{var,Delete[invariants2,ChangeVarpos]}]+ Expand[DIsij[[posB]]newcoefs[[posA]],Modulus->$P] ds[varOld]];
+Return[Expand[(DIsijSUB+newcoefsSUB DIsij[[posB]]),Modulus->$P] . Table[ds[var],{var,Delete[diffInvariants,ChangeVarpos]}]+ Expand[DIsij[[posB]]newcoefs[[posA]],Modulus->$P] ds[varOld]];
 
 ]
 pos=GetLinPos[34,34,95];
@@ -132,7 +132,7 @@ Integrands=Table[Integrand=Expand[UniVarReconstructFUNCS[FitVals[[varpos]],Phase
 NewIntDt=Factor[Expand[Integrands . bvec[[All,2]],Modulus->$P],Modulus->$P]
 
 
-(* ::Section:: *)
+(* ::Section::Closed:: *)
 (*Integrate*)
 
 
@@ -169,15 +169,56 @@ dlogList//DeleteDuplicates//Length
 Export[CurrentDir<>"EvenIntegrands.txt",IntegrandsSlice]
 
 
+(* ::Section:: *)
+(*Find DlogFactors*)
+
+
+dlogList=ReadList[CurrentDir<>"dlogs.txt"];
 SlicedLetters=DeleteDuplicates[Cases[dlogList,_Log,Infinity]]/.Log[x_]:>x
-Export[CurrentDir<>"SlicedEvenLetters.txt",SlicedLetters]
+(*Export[CurrentDir<>"SlicedEvenLetters.txt",SlicedLetters]*)
 
 
+(* ::Subsection:: *)
+(*Load Claude Guesses*)
+
+
+ABVEC=ReadList[CurrentDir<>"/Samples/AVECS.txt"];
+avec=ABVEC[[1]];
+bvec=ABVEC[[2]];
+SliceTpoint=Thread[Rule[bvec[[All,1]],avec[[All,2]]+t bvec[[All,2]]]];
 EvenLetterCandidates=DeleteCases[ReadList[HomeDir<>"/ClaudeLetters/EvenLetterCandidates.txt"],Null];
 EvenLetterCandidatesFACS=DeleteElements[DeleteDuplicates[Flatten[Map[FactorList[#][[All,1]]&,EvenLetterCandidates]]],{1,-1}];
-Position[Factor[EvenLetterCandidatesFACS/.SliceTpoint,Modulus->$P],0]
-EvenLetterCandidatesFACS=Delete[EvenLetterCandidatesFACS,79]
+Position[Factor[EvenLetterCandidatesFACS/.SliceTpoint,Modulus->$P],0];
+EvenLetterCandidatesFACS=Delete[EvenLetterCandidatesFACS,79];
 ELSclice=Factor[EvenLetterCandidatesFACS/.SliceTpoint,Modulus->$P];
+
+
+(* ::Subsection:: *)
+(*Load First 500 Set:*)
+
+
+NewDlogs1=ReadList[CurrentDir<>"NewDlogs-500.txt"];
+EvenLetterCandidatesFACSNew=DeleteElements[DeleteDuplicates[Flatten[Map[FactorList[#][[All,1]]&,DeleteDuplicates[Cases[NewDlogs1,_Log,Infinity]]/.Log[x_]:>x]]],{1,-1}];
+
+
+(*EvenLetterCandidatesFACSNew//Length
+EvenLetterCandidatesFACS//Length*)
+EvenLetterCandidatesFACS=FancyDeleteDuplicates[Join[EvenLetterCandidatesFACS,EvenLetterCandidatesFACSNew]];
+ELSclice=Factor[EvenLetterCandidatesFACS/.SliceTpoint,Modulus->$P];
+
+
+FancyDeleteDuplicates[delset_]:=Module[{size,i,j,delset2,factor},delset2=delset;size=Length[delset2];
+For[i=1,i<=size,i++,
+	For[j=i,j<=size,j++,factor=Factor[delset2[[i]]/delset2[[j]]];
+		If[NumberQ[factor],delset2[[j]]=delset2[[i]];];];];
+Return[DeleteDuplicates[delset2]];]
+
+
+EvenLetterCandidatesFACS//Length
+
+
+(* ::Subsection:: *)
+(*Find Factors*)
 
 
 (*Func=SlicedLetters[[15]]
@@ -216,77 +257,45 @@ FoundFactors=Table[Times@@Map[CheckLetterFactor[Letter,#]&,Range[Length[ELSclice
 
 
 
-(Exponent[Numerator[TestFunc],t]<Num) && (Exponent[Denominator[TestFunc],t]<=Den)
-
-
-FoundFactors[[-1]]
-
-
-Factor[SlicedLetters[[-1]]/FoundFactors[[-1]],Modulus->$P]
+(* ::Section:: *)
+(*Checked fixed Entries*)
 
 
 Exponents=Table[
 NewFunc=Factor[SlicedLetters[[i]]/FoundFactors[[i]]/.Fac[n_]:>ELSclice[[n]],Modulus->$P];
 {Exponent[Numerator[NewFunc],t],Exponent[Denominator[NewFunc],t]},{i,1,Length[SlicedLetters]}]
-
-
-
-
-
 FullreResolved=Flatten[Position[Exponents,{0,0}]]
 ResolvedEvenLettersPos=Map[DeleteElements[Table[If[Log[#]===(dlogList[[i]]/.n_ Log[x_]:>Log[x]),i,0],{i,1,Length[dlogList]}],{0}]&,SlicedLetters[[FullreResolved]]]
-UsedLetters=DeleteDuplicates[Cases[FoundFactors[[FullreResolved]],_Fac,Infinity]]/.Fac[n_]:>EvenLetterCandidatesFACS[[n]]
+UsedLetters=DeleteDuplicates[Cases[FoundFactors[[FullreResolved]],_Fac,Infinity]]/.Fac[n_]:>EvenLetterCandidatesFACS[[n]];
 SolvedMatrixPos=EvenPos[[Flatten[ResolvedEvenLettersPos]]]
 
 
-Export[CurrentDir<>"DlogFactors.txt",UsedLetters]
-Export[CurrentDir<>"Solved.txt",SolvedMatrixPos]
 
 
+OldSolved=ReadList[CurrentDir<>"Solved.txt"]
 
 
-FoundFactors//Length
-SlicedLetters//Length
-EvenPos//Length
+(* ::Subsection:: *)
+(*Export*)
+
+
+Export[CurrentDir<>"DlogFactors-2.txt",UsedLetters]
+Export[CurrentDir<>"Solved-2.txt",SolvedMatrixPos]
+
+
 
 
 AllEvenLettersPos=Map[DeleteElements[Table[If[Log[#]===(dlogList[[i]]/.n_ Log[x_]:>Log[x]),i,0],{i,1,Length[dlogList]}],{0}]&,SlicedLetters]
 FactorsWithPositions=Flatten[Table[Table[{EvenPos[[pos]],FoundFactors[[i]]},{pos,AllEvenLettersPos[[i]]}] ,{i,1,Length[AllEvenLettersPos]}],1];
 FactorsWithPositions2=Flatten[Table[Table[{pos,FoundFactors[[i]]},{pos,AllEvenLettersPos[[i]]}] ,{i,1,Length[AllEvenLettersPos]}],1];
 
-Export[CurrentDir<>"Factors.txt",EvenLetterCandidatesFACS]
-Export[CurrentDir<>"EvenLetterPos.txt",FactorsWithPositions]
-Export[CurrentDir<>"EvenLetterPos2.txt",FactorsWithPositions2]
+Export[CurrentDir<>"Factors-2.txt",EvenLetterCandidatesFACS]
+Export[CurrentDir<>"EvenLetterPos1-2.txt",FactorsWithPositions]
+Export[CurrentDir<>"EvenLetterPos2-2.txt",FactorsWithPositions2]
 
 
 
 
 
 
-dlogList[[6]]/.Log[x_]:>Log[Factor[x,Modulus->$P]]
 
-
-CheckLetterFactor[SlicedLetters[[170]],2]
-CheckLetterFactor[SlicedLetters[[170]],10]
-
-
-FoundFactors[[170]]
-Exponents[[170]]
-FactorsWithPositions2[[194]]
-FactorsWithPositions[[194]]
-
-
-FactorsWithPositions2=Table[Table[{pos,FoundFactors[[i]]},{pos,AllEvenLettersPos[[i]]}] ,{i,1,Length[AllEvenLettersPos]}];
-FactorsWithPositions2[[170]]
-
-
-FactorsWithPositions2[[170]]
-
-
-SortBy[Flatten[FactorsWithPositions2,1],First][[194]]
-
-
-Integrand=(381209005+862141502 t+649333794 t^2+560077290 t^3+91831431 t^4+514554572 t^5+1142264796 t^6+515414593 t^7+899128822 t^8+947335993 t^9)/(765299706+762305862 t+1656502159 t^2+139249457 t^3+1621683602 t^4+1992736910 t^5+976544736 t^6+1651639918 t^7+72869297 t^8+792053664 t^9+1159475132 t^10+t^11);
-
-
-TragerLogSubtractionNumeric[Integrand,t,{},{},Modulus->$P]
