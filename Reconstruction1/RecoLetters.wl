@@ -8,50 +8,81 @@ SectorDir = FileNameJoin[parts[[;;pos+1]]];
 CurrentDir=$DIR;
 kirapath=SectorDir;
 $P=2^31-1;
+diffInvariants={mt2,s12,s123,s16,s23,s234,s34,s345,s45,s56};
 PureIntegrals=ReadList[FileNameJoin[{SectorDir,"SubBasis.txt"}]];
-(*PureIntegrals[[;;52]]=ConstantArray[0,52];*)
 SetDirectory[CurrentDir];
 NotbookDir=NotebookDirectory[];
 Get[FileNameJoin[{HomeDir,"files/ExtraFunctions.m"}]];
 SQRTS=Cases[PureIntegrals,_root,Infinity]//DeleteDuplicates;
-(*SQRTPOWS=Map[Exponent[#,SQRTS]&,PureIntegrals];
-SQRTVEC=Map[Times@@Power[SQRTS,#]&,SQRTPOWS];*)
-OutPutPath="Samples/Full-Samples-500";
-phasespacepoints=ReadList[FileNameJoin[{CurrentDir,ToString[StringForm["``/phasespacepoints.txt",OutPutPath]]}]];
-(*tvarlist=Flatten[ReadList[FileNameJoin[{CurrentDir,ToString[StringForm["``/tvars.txt",OutPutPath]]}]][[;;;; 1]]];*)
-phasespacepoints=phasespacepoints[[All,2;;]][[1;; ;; 1]];
-diffInvariants={mt2,s12,s123,s16,s23,s234,s34,s345,s45,s56};
-PhaseSpacePoints=Map[Thread[Rule[diffInvariants,#]]&,phasespacepoints];
-(*PhaseSpacePoints=Table[Join[PhaseSpacePoints[[i]],{tvarlist[[i]]}],{i,1,Length[PhaseSpacePoints]}];*)
-(*PhaseSpacePoints=Map[Thread[Rule[diffInvariants,#]]&,phasespacepoints];*)
+
 rootSet=(Cases[PureIntegrals[[-5;;]],_root,Infinity]//DeleteDuplicates)/.root[x_]:>x;
 GetLinPos[x1_,x2_,NMI_]:=First[Flatten[Position[Flatten[Table[{i,j},{i,1,NMI},{j,1,NMI}],1],{x1,x2}]]];
 Get[ToString[StringJoin[HomeDir,"/files/ExtraModules.m"]]];
 Get[ToString[StringJoin[HomeDir,"/files/ExtraModules.m"]]];
 usedvars={mt2,s12,s123,s23,s234,s34,s345,s45,s56};
+
+OutPutPath="Samples/Full-Samples-500";
+phasespacepoints=ReadList[FileNameJoin[{CurrentDir,ToString[StringForm["``/phasespacepoints.txt",OutPutPath]]}]];
+phasespacepoints=phasespacepoints[[All,2;;]][[1;; ;; 1]];
+PhaseSpacePoints=Map[Thread[Rule[diffInvariants,#]]&,phasespacepoints];
 For[i=1,i<=Length[usedvars],i++,
-LinearTerm[usedvars[[i]]]=ReadList[FileNameJoin[{Directory[],ToString[StringForm["``/LinTerm``_0001.txt",OutPutPath,usedvars[[i]]]]}]];
+LinearTerm2[usedvars[[i]]]=ReadList[FileNameJoin[{Directory[],ToString[StringForm["``/LinTerm``_0001.txt",OutPutPath,usedvars[[i]]]]}]];
 ];
 
 
 
 
 (* ::Section:: *)
+(*Load Samples*)
+
+
+OutPutPaths={"Samples/Full-Samples-10000"};
+SplitLengths={2};
+PhaseSpacePoints={};
+Do[
+phasespacepointsIN=ReadList[FileNameJoin[{CurrentDir,ToString[StringForm["``/phasespacepoints.txt",OutPutPaths[[q]]]]}]];
+phasespacepointsIN=phasespacepointsIN[[All,2;;]];
+PhaseSpacePointsIN=Map[Thread[Rule[diffInvariants,#]]&,phasespacepointsIN];
+PhaseSpacePoints=Join[PhaseSpacePoints,PhaseSpacePointsIN]
+,{q,1,Length[OutPutPaths]}]
+
+loadfile=1;
+Do[
+OutPutPath=OutPutPaths[[filepos]];
+Print["Reading From: "<>OutPutPath];
+Monitor[For[q=1,q<=SplitLengths[[filepos]],q++,
+	For[i=1,i<=Length[usedvars],i++,
+	LinearTerm[usedvars[[i]],loadfile]=ReadList[FileNameJoin[{Directory[],ToString[StringForm["``/LinTerm``_``.txt",OutPutPath,usedvars[[i]],IntegerString[q,10,4]]]}]][[;;-1]];
+	If[q<SplitLengths[[filepos]],LinearTerm[usedvars[[i]],loadfile]=LinearTerm[usedvars[[i]],loadfile][[;;-2]]];
+	];
+loadfile+=1;
+],"Subfile: "<>ToString[q]<>" var: "<>ToString[usedvars[[i]]]];
+,{filepos,1,Length[OutPutPaths]}]
+
+(*PhaseSpacePoints=PhaseSpacePoints[[;;3000]];*)
+Map[LinearTerm[#]=(Join@@Table[LinearTerm[#,q],{q,1,Total[SplitLengths]}]);&,usedvars];
+
+
+LinearTerm[s12]//Length
+PhaseSpacePoints//Length
+
+
+(* ::Section:: *)
 (*Load More Suff For Dlogging:*)
 
 
-SolvedAlready=ReadList[CurrentDir<>"Solved.txt"];
-FactorsWithPositions=ReadList[CurrentDir<>"EvenLetterPos.txt"];
-FactorsWithPositions2=ReadList[CurrentDir<>"EvenLetterPos2.txt"];
-EvenLetterCandidatesFACS=ReadList[CurrentDir<>"Factors.txt"];
+SolvedAlready=ReadList[CurrentDir<>"Solved-2.txt"];
+FactorsWithPositions=ReadList[CurrentDir<>"EvenLetterPos1-2.txt"];
+FactorsWithPositions2=ReadList[CurrentDir<>"EvenLetterPos2-2.txt"];
+EvenLetterCandidatesFACS=ReadList[CurrentDir<>"Factors-2.txt"];
 DtIntegrands=ReadList[CurrentDir<>"EvenIntegrands.txt"];
 dlogList=ReadList[CurrentDir<>"dlogs.txt"];
 VarGrid=ReadList[CurrentDir<>"VarGrid.txt"];
-Nterms=ReadList[CurrentDir<>"TermsNeededPowers.txt"];
-AnsatzPowers=ReadList[CurrentDir<>"RemainingPowers.txt"];
+Nterms=ReadList[CurrentDir<>"TermsNeededPowers-2.txt"];
+AnsatzPowers=ReadList[CurrentDir<>"RemainingPowers-2.txt"];
 ABVEC=ReadList[CurrentDir<>"/Samples/AVECS.txt"];
-avec=ABVEC[[1]]
-bvec=ABVEC[[2]]
+avec=ABVEC[[1]];
+bvec=ABVEC[[2]];
 SliceTpoint=Thread[Rule[bvec[[All,1]],avec[[All,2]]+t bvec[[All,2]]]];
 
 
@@ -91,20 +122,19 @@ ChangeAuxVarInDe[s16,s12,DIsij,tpoint]
 Nterms
 
 
-FrobeniusSolve[{1,1,1,1,1,1,1},3]//Length
-FrobeniusSolve[{1,1,1,1,1,1,1},4]//Length
-
-
 (* ::Section:: *)
 (*Recontruct 1*)
 
 
-pos1=39;
-pos2=34;
-pos=GetLinPos[pos1,pos2,95];
-DIsij=Table[Insert[Map[LinearTerm[#][[psp,1,pos]]&,usedvars],0,4],{psp,1,Length[PhaseSpacePoints]}];
-DIsij=Table[Coefficient[ChangeAuxVarInDe[s16,s12,DIsij[[psp]],PhaseSpacePoints[[psp]]],Table[ds[var],{var,diffInvariants}]],{psp,1,Length[PhaseSpacePoints]}];
+CloseKernels[];
+LaunchKernels[5];
 
+
+pos1=95;
+pos2=95;
+pos=GetLinPos[pos1,pos2,95];
+DIsij=Table[Insert[Map[LinearTerm[#][[psp,1,pos]]&,usedvars],0,4],{psp,1,Length[PhaseSpacePoints]}]//EchoTiming;
+(*DIsij=Table[Coefficient[ChangeAuxVarInDe[s16,s234,DIsij[[psp]],PhaseSpacePoints[[psp]]],Table[ds[var],{var,diffInvariants}]],{psp,1,Length[PhaseSpacePoints]}]//EchoTiming;*)
 setup=AnsatzPowers[[Flatten[Position[Nterms[[All,1]],{pos1,pos2}]]//First]]
 Nterms[[Flatten[Position[Nterms[[All,1]],{pos1,pos2}]]//First]]
 vars=VarGrid[[setup[[1,1]],setup[[1,2]]]]//Sort
@@ -130,7 +160,7 @@ logRational Log[FactorsWithPositions2[[testpos]][[2]]/.Fac[n_]:>EvenLetterCandid
 DlogDiff=Factor[Expand[logRational  D[Log[FactorsWithPositions2[[testpos]][[2]]/.Fac[n_]:>EvenLetterCandidatesFACS[[n]]],var]],Modulus->$P]
 fitvec=Expand[fitvec-(DlogDiff/.PhaseSpacePoints),Modulus->$P];
 Get[ToString[StringJoin[HomeDir,"/files/ExtraRecoModules.m"]]];
-Reco=ReconstructFUNCS[fitvec,PhaseSpacePoints[[All,Flatten[Map[Position[diffInvariants,#]&,vars]],2]],vars,1,2,Debug->False];
+Reco=ReconstructFUNCS[fitvec,PhaseSpacePoints[[All,Flatten[Map[Position[diffInvariants,#]&,vars]],2]],vars,5,6,Debug->True];
 Ansatz=Reco[[2]];
 ReconstructedFunc=Together[Ansatz/.Thread[Rule[Sort[Cases[Ansatz,_fac,Infinity]],Reco[[1,1]]]]/.n_Integer:>RationalReconstruct[n]]
 
@@ -150,6 +180,7 @@ Factor[Cases[{Dlog},_Log,Infinity]/.Log[x_]:>x]
 
 
 CloseKernels[];
+$DistributedContexts = None;
 kernels=LaunchKernels[20];
 
 
@@ -203,10 +234,7 @@ vars=VarGrid[[matpos[[1]],matpos[[2]]]]//Sort;
 If[GetNumberOfTermsNeeded[Length[vars],setup[[2]],setup[[3]]]<=500,
 GetDLogs[matpos[[1]],matpos[[2]]],0],
 {it1,1,Length[AnsatzPowers[[All,1]]]}],{ProgressIndicator[it1,{1,Length[AnsatzPowers[[All,1]]]}],AnsatzPowers[[it1,1]]}];
-Export[CurrentDir<>"NewDlogs-500.txt",NewDLogs]
-
-
-NewDLogs[[failedEntries]]=NewDLogsFailed
+Export[CurrentDir<>"NewDlogs-500-2.txt",NewDLogs]
 
 
 (* ::Section:: *)
@@ -243,3 +271,6 @@ GetDLogs[matpos[[1]],matpos[[2]]],0],
 
 
 NewDLogsFailed
+
+
+Expand[D[Log[(906811812+1417006012 t+872189447 t^2+386053936 t^3+1484787178 t^4+40849427 t^5+t^6)/(57055600+196815237 t+720038392 t^2+1147743761 t^3+13266943 t^4+1085638404 t^5+266323194 t^6+1836178903 t^7+t^8)],t],Modulus->$P]

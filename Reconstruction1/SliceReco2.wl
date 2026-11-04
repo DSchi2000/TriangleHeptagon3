@@ -137,7 +137,7 @@ Export[CurrentDir<>"TermsNeededPowers-2.txt",NAnsaetze]
 VarGrid[[93,93]]
 
 
-(* ::Section::Closed:: *)
+(* ::Section:: *)
 (*BackUp*)
 
 
@@ -152,3 +152,9 @@ DlogDiff=Factor[Expand[logRational  D[Log[FactorsWithPositions2[[testpos]][[2]]/
 NewRecoFunc=Factor[DtIntegrands[[evenpos]]-DlogDiff,Modulus->$P];
 NumPow=Exponent[Numerator[NewRecoFunc],t]
 DenPow=Exponent[Denominator[NewRecoFunc],t]
+
+
+GetNumberOfTermsNeeded[n_,num_,den_]:=Binomial[n + num-1, n-1]+Binomial[n + den-1, n-1]
+
+
+GetNumberOfTermsNeeded[10,4,5]
