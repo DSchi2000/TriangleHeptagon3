@@ -23,7 +23,7 @@ SectorLaporta=ReadList[FileNameJoin[{SectorDir,"SectorLaportaBasis.txt"}]];
 MaxCutInts=Range[95];
 AllSectors=True;
 (*MaxCutInts=Range[35];*)
-usedauxvar=S16
+usedauxvar=S123
 changeAuxVar[usedauxvar];
 
 PureIntegralsMaxCut=SectorLaporta;
@@ -160,3 +160,20 @@ PureIntegrals[[95]]
 
 
 
+ArrayReshape[MatReco[mt2],{BasisLength,BasisLength}][[34,34]]
+ArrayReshape[MatReco[s12],{BasisLength,BasisLength}][[34,34]]
+ArrayReshape[MatReco[s123],{BasisLength,BasisLength}][[34,34]]
+ArrayReshape[MatReco[s16],{BasisLength,BasisLength}][[34,34]]
+ArrayReshape[MatReco[s23],{BasisLength,BasisLength}][[34,34]]
+ArrayReshape[MatReco[s234],{BasisLength,BasisLength}][[34,34]]
+ArrayReshape[MatReco[s34],{BasisLength,BasisLength}][[34,34]]
+ArrayReshape[MatReco[s345],{BasisLength,BasisLength}][[34,34]]
+ArrayReshape[MatReco[s45],{BasisLength,BasisLength}][[34,34]]
+ArrayReshape[MatReco[s56],{BasisLength,BasisLength}][[34,34]]
+
+
+tpoint=Thread[Rule[invariants,tpoints[[1]]]]
+
+
+diffop=getDifferentialOperator[tpoint];
+Coefficient[diffop,ds[S16]]/.p[n_]:>0

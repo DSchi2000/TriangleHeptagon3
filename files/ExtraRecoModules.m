@@ -29,7 +29,7 @@ NROOTS=DeleteDuplicates[Cases[roots,_root,Infinity]]/.root[x_]:>x;
 NSqrtDegrees=(ResourceFunction["PolynomialTotalDegree"][#,vars]&/@NROOTS);
 
 rtsetNNR=roots/.Table[Rule[root[NROOTS[[i]]],Power[vars[[1]],NSqrtDegrees[[i]]]],{i,1,Length[NSqrtDegrees]}];
-SqrtDegrees=(ResourceFunction["PolynomialTotalDegree"][#,vars]&/@rtsetNNR)//Echo;
+SqrtDegrees=(ResourceFunction["PolynomialTotalDegree"][#,vars]&/@rtsetNNR);
 rootAnsDim=Replace[MonomialList[rootAnsatzN],n_Integer:>0,{1}]/.Times->Plus/.Thread[Rule[Table[rt[i],{i,1,Length[roots]}],SqrtDegrees]];
 rootAnsMono=MonomialList[rootAnsatzN];
 AnsatzPowersNumi=Flatten[Table[Join[#,CoefficientRules[rootAnsMono[[sqrtPos]],Table[rt[i],{i,1,Length[roots]}]][[1,1]]]&/@FrobeniusSolve[ConstantArray[1,Length[vars]],exp1-rootAnsDim[[sqrtPos]]],{sqrtPos,1,Length[rootAnsMono]}],1];
@@ -93,7 +93,9 @@ PhaseSpacePointsRTS=MapThread[Join,{parsCut,PhaseSpacePointsRTS}];
 	  Return[-1]
 	];
 	NumiN=Expand[{MatNumiPart[[1]]} . Transpose[NullSpaces[[All,;;AnsatzLengthN]]],Modulus->$P];
-    DenoN=Expand[({MatDenoPart[[1,;;-2]]}) . (Transpose[NullSpaces[[All,AnsatzLengthN+1;;-2]]]),Modulus->$P];
+    DenoN=Expand[({MatDenoPart[[1,;;-1]]}) . (Transpose[NullSpaces[[All,AnsatzLengthN+1;;-1]]]),Modulus->$P];
+
+   
     If[exp2===0,DenoN={1}];
     If[exp1===0,NumiN={1}];
 
