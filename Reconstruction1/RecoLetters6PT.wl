@@ -251,3 +251,52 @@ DlogFacs[[4]]
 
 
 Expand[Factor[DlogDiff+DlogDiffs16,Modulus->$P]/.PhaseSpacePoints[[1]],Modulus->$P]
+
+
+(* ::Section:: *)
+(*Remain ones sorting*)
+
+
+AnsatzPowers
+
+
+pos1=93;
+pos2=27;
+pos=GetLinPos[pos1,pos2,95];
+setup=AnsatzPowers[[Flatten[Position[Nterms[[All,1]],{pos1,pos2}]]//First]]
+testpos=Flatten[Position[FactorsWithPositions[[All,1]],setup[[1]]]]//First
+evenpos=FactorsWithPositions2[[testpos]][[1]];
+FactorsWithPositions2[[testpos]]
+dlogList[[evenpos]]/.Log[x_]:>Factor[x,Modulus->$P]
+
+
+SlicedFactors//Length
+Factor[SlicedFactors[[2]]/SlicedFactors[[8]]^2,Modulus->$P]
+
+
+(*Dlog9494/.SliceTpoint/.Log[x_]:>Factor[x,Modulus->$P]
+
+Dlog9595/.SliceTpoint/.Log[x_]:>Factor[x,Modulus->$P]*)
+
+
+possible6ptfacs=DeleteElements[Join[FactorList[Times@@Numerator[Cases[{Dlog9494,Dlog9595},_Log,Infinity]/.Log[x_]:>x]][[All,1]],
+FactorList[Times@@Denominator[Cases[{Dlog9494,Dlog9595},_Log,Infinity]/.Log[x_]:>x]][[All,1]]],{-1,1}];
+
+
+SlicedFactors=Factor[possible6ptfacs/.SliceTpoint,Modulus->$P]
+
+
+SortBy[Map[FactorList[#][[All,1]]&,SlicedFactors]//Flatten//Tally,Last]
+
+
+pos1=95;
+pos2=95;
+pos=GetLinPos[pos1,pos2,95];
+setup=AnsatzPowers[[Flatten[Position[Nterms[[All,1]],{pos1,pos2}]]//First]]
+testpos=Flatten[Position[FactorsWithPositions[[All,1]],setup[[1]]]]//First
+evenpos=FactorsWithPositions2[[testpos]][[1]];
+FactorsWithPositions2[[testpos]]
+dlogList[[evenpos]]
+
+
+
