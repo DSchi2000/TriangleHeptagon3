@@ -76,11 +76,11 @@ DeFoldMat=Normal[Total[Table[ArrayReshape[LinearTerm[var][[1,1]],{Length[PureInt
 
 rootVectorN=rootVector/.PhaseSpacePoints[[1]];
 RootRatioMat=Expand[Table[Together[rootVectorN[[i1]]/rootVectorN[[i2]]],{i1,1,Length[PureIntegrals]},{i2,1,Length[PureIntegrals]}],Modulus->$P]*DeFoldMat;
-EvenPos=Position[RootRatioMat,1];
+EvenPos=Position[RootRatioMat,1]
 LinearizedEvenPos=Map[GetLinPos[#[[1]],#[[2]],95]&,EvenPos]
 
 
-(* ::Section:: *)
+(* ::Section::Closed:: *)
 (*Variable Shift Tech*)
 
 
@@ -140,7 +140,7 @@ Get["/home/dschiebe/Documents/packages/trager/Trager.wl"]
 TragerLogSubtractionNumeric[NewIntDt,t,{},{},Modulus->$P]
 
 
-(* ::Section:: *)
+(* ::Section::Closed:: *)
 (*SATISFACTORY YEAAAAH*)
 
 
@@ -198,23 +198,24 @@ ELSclice=Factor[EvenLetterCandidatesFACS/.SliceTpoint,Modulus->$P];
 
 
 NewDlogs1=ReadList[CurrentDir<>"NewDlogs-500.txt"];
-EvenLetterCandidatesFACSNew=DeleteElements[DeleteDuplicates[Flatten[Map[FactorList[#][[All,1]]&,DeleteDuplicates[Cases[NewDlogs1,_Log,Infinity]]/.Log[x_]:>x]]],{1,-1}];
-
-
-(*EvenLetterCandidatesFACSNew//Length
-EvenLetterCandidatesFACS//Length*)
-EvenLetterCandidatesFACS=FancyDeleteDuplicates[Join[EvenLetterCandidatesFACS,EvenLetterCandidatesFACSNew]];
-ELSclice=Factor[EvenLetterCandidatesFACS/.SliceTpoint,Modulus->$P];
-
-
+NewDlogs2=ReadList[CurrentDir<>"NewDlogs-500-2.txt"];
+NewDlogs3=ReadList[CurrentDir<>"Dlog-94-94.txt"];
+fiveptgrams=ReadList[CurrentDir<>"grams5pt.txt"];
+EvenLetterCandidatesFACSNew=DeleteElements[DeleteDuplicates[Flatten[Map[FactorList[#][[All,1]]&,DeleteDuplicates[Cases[{NewDlogs1,NewDlogs2,NewDlogs3},_Log,Infinity]]/.Log[x_]:>x]]],{1,-1}];
+EvenLetterCandidatesFACSNew=DeleteDuplicates[Join[EvenLetterCandidatesFACSNew,fiveptgrams]];
+EvenLetterCandidatesFACSNew//Length
 FancyDeleteDuplicates[delset_]:=Module[{size,i,j,delset2,factor},delset2=delset;size=Length[delset2];
 For[i=1,i<=size,i++,
 	For[j=i,j<=size,j++,factor=Factor[delset2[[i]]/delset2[[j]]];
 		If[NumberQ[factor],delset2[[j]]=delset2[[i]];];];];
 Return[DeleteDuplicates[delset2]];]
-
-
+EvenLetterCandidatesFACS=FancyDeleteDuplicates[Join[EvenLetterCandidatesFACS,EvenLetterCandidatesFACSNew]];
+ELSclice=Factor[EvenLetterCandidatesFACS/.SliceTpoint,Modulus->$P];
+ELSclice//Length
 EvenLetterCandidatesFACS//Length
+
+
+
 
 
 (* ::Subsection:: *)
@@ -257,6 +258,22 @@ FoundFactors=Table[Times@@Map[CheckLetterFactor[Letter,#]&,Range[Length[ELSclice
 
 
 
+
+ELSclice[[-1]]
+
+
+FoundFactors[[-2]]
+
+
+
+Factor[Numerator[(NewDlogs3/.Log[x_]:>x)]/.SliceTpoint,Modulus->$P]
+Factor[Denominator[(NewDlogs3/.Log[x_]:>x)]/.SliceTpoint,Modulus->$P]
+Factor[SlicedLetters[[-2]],Modulus->$P]
+
+
+Factor[D[dlogList[[-2]],t],Modulus->$P]
+
+
 (* ::Section:: *)
 (*Checked fixed Entries*)
 
@@ -279,8 +296,8 @@ OldSolved=ReadList[CurrentDir<>"Solved.txt"]
 (*Export*)
 
 
-Export[CurrentDir<>"DlogFactors-2.txt",UsedLetters]
-Export[CurrentDir<>"Solved-2.txt",SolvedMatrixPos]
+Export[CurrentDir<>"DlogFactors-3.txt",UsedLetters]
+Export[CurrentDir<>"Solved-3.txt",SolvedMatrixPos]
 
 
 
@@ -289,9 +306,9 @@ AllEvenLettersPos=Map[DeleteElements[Table[If[Log[#]===(dlogList[[i]]/.n_ Log[x_
 FactorsWithPositions=Flatten[Table[Table[{EvenPos[[pos]],FoundFactors[[i]]},{pos,AllEvenLettersPos[[i]]}] ,{i,1,Length[AllEvenLettersPos]}],1];
 FactorsWithPositions2=Flatten[Table[Table[{pos,FoundFactors[[i]]},{pos,AllEvenLettersPos[[i]]}] ,{i,1,Length[AllEvenLettersPos]}],1];
 
-Export[CurrentDir<>"Factors-2.txt",EvenLetterCandidatesFACS]
-Export[CurrentDir<>"EvenLetterPos1-2.txt",FactorsWithPositions]
-Export[CurrentDir<>"EvenLetterPos2-2.txt",FactorsWithPositions2]
+Export[CurrentDir<>"Factors-3.txt",EvenLetterCandidatesFACS]
+Export[CurrentDir<>"EvenLetterPos1-3.txt",FactorsWithPositions]
+Export[CurrentDir<>"EvenLetterPos2-3.txt",FactorsWithPositions2]
 
 
 
@@ -299,3 +316,10 @@ Export[CurrentDir<>"EvenLetterPos2-2.txt",FactorsWithPositions2]
 
 
 
+DeleteDuplicates[Cases[FoundFactors,_Fac,Infinity]]//Sort
+
+
+FactorsWithPositions[[-6]]
+
+
+EvenLetterCandidatesFACS[[61]]

@@ -41,10 +41,10 @@ LinearTerm[usedvars[[i]]]=ReadList[FileNameJoin[{Directory[],ToString[StringForm
 (*Load More Suff For Dlogging:*)
 
 
-SolvedAlready=ReadList[CurrentDir<>"Solved-2.txt"];
-FactorsWithPositions=ReadList[CurrentDir<>"EvenLetterPos1-2.txt"];
-FactorsWithPositions2=ReadList[CurrentDir<>"EvenLetterPos2-2.txt"];
-EvenLetterCandidatesFACS=ReadList[CurrentDir<>"Factors-2.txt"];
+SolvedAlready=ReadList[CurrentDir<>"Solved-3.txt"];
+FactorsWithPositions=ReadList[CurrentDir<>"EvenLetterPos1-3.txt"];
+FactorsWithPositions2=ReadList[CurrentDir<>"EvenLetterPos2-3.txt"];
+EvenLetterCandidatesFACS=ReadList[CurrentDir<>"Factors-3.txt"];
 DtIntegrands=ReadList[CurrentDir<>"EvenIntegrands.txt"];
 dlogList=ReadList[CurrentDir<>"dlogs.txt"];
 ABVEC=ReadList[CurrentDir<>"/Samples/AVECS.txt"];
@@ -61,6 +61,7 @@ SliceTpoint=Thread[Rule[bvec[[All,1]],avec[[All,2]]+t bvec[[All,2]]]];
 GetResidualPowers[matpos_]:=Module[{testpos,evenpos,logRational,DlogDiff,NewRecoFunc,NumPow,DenPow},
 testpos=Flatten[Position[FactorsWithPositions[[All,1]],matpos]]//First;
 evenpos=FactorsWithPositions2[[testpos]][[1]];
+FactorsWithPositions2[[testpos]]//Echo;
 logRational=dlogList[[evenpos]]/.n_ Log[x_]:>n/.Log[x_]:>1;
 DlogDiff=Factor[Expand[logRational  D[Log[FactorsWithPositions2[[testpos]][[2]]/.Fac[n_]:>EvenLetterCandidatesFACS[[n]]/.SliceTpoint],t]]/.SliceTpoint,Modulus->$P];
 NewRecoFunc=Factor[DtIntegrands[[evenpos]]-DlogDiff,Modulus->$P];
@@ -120,18 +121,18 @@ VarGrid=Table[DeleteDuplicates[Join[vars1,vars2]],{vars1,VariableIntegrals},{var
 Complement[FactorsWithPositions[[All,1]],SolvedAlready]
 
 
-GetResidualPowers[{95,95}]
+GetResidualPowers[{94,94}]
 
 
-GetNumberOfTermsNeeded[n_,num_,den_]:=Binomial[n + num-1, n]+Binomial[n + den-1, n]
+GetNumberOfTermsNeeded[n_,num_,den_]:=Binomial[n + num-1, n-1]+Binomial[n + den-1, n-1]
 RecoPowers=Map[GetResidualPowers[#]&,Complement[FactorsWithPositions[[All,1]],SolvedAlready]]
 
 NAnsaetze=Table[{RecoPowers[[i,1]],GetNumberOfTermsNeeded[Length[VarGrid[[RecoPowers[[i,1,1]],RecoPowers[[i,1,2]]]]],RecoPowers[[i,2]],RecoPowers[[i,3]]]},{i,1,Length[RecoPowers]}]
 
 
 (*Export[CurrentDir<>"VarGrid.txt",VarGrid]*)
-Export[CurrentDir<>"RemainingPowers-2.txt",RecoPowers]
-Export[CurrentDir<>"TermsNeededPowers-2.txt",NAnsaetze]
+Export[CurrentDir<>"RemainingPowers-3.txt",RecoPowers]
+Export[CurrentDir<>"TermsNeededPowers-3.txt",NAnsaetze]
 
 
 VarGrid[[93,93]]

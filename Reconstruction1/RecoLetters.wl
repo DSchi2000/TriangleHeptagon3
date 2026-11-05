@@ -18,7 +18,7 @@ SQRTS=Cases[PureIntegrals,_root,Infinity]//DeleteDuplicates;
 rootSet=(Cases[PureIntegrals[[-5;;]],_root,Infinity]//DeleteDuplicates)/.root[x_]:>x;
 GetLinPos[x1_,x2_,NMI_]:=First[Flatten[Position[Flatten[Table[{i,j},{i,1,NMI},{j,1,NMI}],1],{x1,x2}]]];
 Get[ToString[StringJoin[HomeDir,"/files/ExtraModules.m"]]];
-Get[ToString[StringJoin[HomeDir,"/files/ExtraModules.m"]]];
+
 usedvars={mt2,s12,s123,s23,s234,s34,s345,s45,s56};
 
 OutPutPath="Samples/Full-Samples-500";
@@ -127,21 +127,21 @@ Nterms
 
 
 CloseKernels[];
-LaunchKernels[5];
+LaunchKernels[20];
 
 
-pos1=95;
-pos2=95;
+pos1=94;
+pos2=94;
 pos=GetLinPos[pos1,pos2,95];
 DIsij=Table[Insert[Map[LinearTerm[#][[psp,1,pos]]&,usedvars],0,4],{psp,1,Length[PhaseSpacePoints]}]//EchoTiming;
-(*DIsij=Table[Coefficient[ChangeAuxVarInDe[s16,s234,DIsij[[psp]],PhaseSpacePoints[[psp]]],Table[ds[var],{var,diffInvariants}]],{psp,1,Length[PhaseSpacePoints]}]//EchoTiming;*)
+(*DIsij=Table[Coefficient[ChangeAuxVarInDe[s16,s12,DIsij[[psp]],PhaseSpacePoints[[psp]]],Table[ds[var],{var,diffInvariants}]],{psp,1,Length[PhaseSpacePoints]}]//EchoTiming;*)
 setup=AnsatzPowers[[Flatten[Position[Nterms[[All,1]],{pos1,pos2}]]//First]]
 Nterms[[Flatten[Position[Nterms[[All,1]],{pos1,pos2}]]//First]]
 vars=VarGrid[[setup[[1,1]],setup[[1,2]]]]//Sort
 (*vars={s16,mt2}*)
 
 
-var=mt2;
+var=s23;
 setup[[2]]
 setup[[3]]
 
@@ -152,17 +152,29 @@ FactorsWithPositions2[[testpos]]
 evenpos=FactorsWithPositions2[[testpos]][[1]];
 
 
+EqnConstFull=Sum[D[G6,var] ds[var],{var,diffInvariants}];
+diffauxvar=First[Solve[EqnConstFull==0,ds[s16]]];
+sixpointdiff=Coefficient[diffauxvar[[1,2]],ds[mt2]]
+
+
 DtIntegrands[[evenpos]]
 Expand[DtIntegrands[[evenpos]],Modulus->$P]
 dlogList[[evenpos]]
 logRational=dlogList[[evenpos]]/.n_ Log[x_]:>n/.Log[x_]:>1
 logRational Log[FactorsWithPositions2[[testpos]][[2]]/.Fac[n_]:>EvenLetterCandidatesFACS[[n]]]
 DlogDiff=Factor[Expand[logRational  D[Log[FactorsWithPositions2[[testpos]][[2]]/.Fac[n_]:>EvenLetterCandidatesFACS[[n]]],var]],Modulus->$P]
-fitvec=Expand[fitvec-(DlogDiff/.PhaseSpacePoints),Modulus->$P];
+DlogDiffs16=Factor[sixpointdiff*Expand[logRational  D[Log[FactorsWithPositions2[[testpos]][[2]]/.Fac[n_]:>EvenLetterCandidatesFACS[[n]]],s16]],Modulus->$P]
+fitvec=DIsij[[All,First[Flatten[Position[diffInvariants,var]]]]];
+(*fitvec=Expand[fitvec-((DlogDiff+DlogDiffs16)/.PhaseSpacePoints),Modulus->$P];*)
 Get[ToString[StringJoin[HomeDir,"/files/ExtraRecoModules.m"]]];
-Reco=ReconstructFUNCS[fitvec,PhaseSpacePoints[[All,Flatten[Map[Position[diffInvariants,#]&,vars]],2]],vars,5,6,Debug->True];
+Reco=ReconstructOnVariety[fitvec,PhaseSpacePoints[[All,Flatten[Map[Position[diffInvariants,#]&,vars]],2]],vars,4,5,{G6,s16},Debug->True];
+
+(*Reco=ReconstructFUNCS[fitvec,PhaseSpacePoints[[All,Flatten[Map[Position[diffInvariants,#]&,vars]],2]],vars,4,5,Debug->True]*)
 Ansatz=Reco[[2]];
 ReconstructedFunc=Together[Ansatz/.Thread[Rule[Sort[Cases[Ansatz,_fac,Infinity]],Reco[[1,1]]]]/.n_Integer:>RationalReconstruct[n]]
+
+
+Factor[ReconstructedFunc/.SliceTpoint,Modulus->$P]
 
 
 (* ::Section:: *)
@@ -171,8 +183,12 @@ ReconstructedFunc=Together[Ansatz/.Thread[Rule[Sort[Cases[Ansatz,_fac,Infinity]]
 
 (*Get["/home/daniel/Documents/packages/trager/Trager.wl"]*)
 Get["/home/dschiebe/Documents/packages/trager/Trager.wl"]
-Dlog=TragerLogSubtraction[ReconstructedFunc,var,Parallelize->True,Debug->True]
+Dlog=TragerLogSubtraction[ReconstructedFunc,var,{s16},{G6},Parallelize->True,Debug->True]
 Factor[Cases[{Dlog},_Log,Infinity]/.Log[x_]:>x]
+
+
+Dlog1=Dlog;
+Export[CurrentDir<>"Dlog-94-94.txt",Dlog1]
 
 
 (* ::Section:: *)
@@ -274,3 +290,24 @@ NewDLogsFailed
 
 
 Expand[D[Log[(906811812+1417006012 t+872189447 t^2+386053936 t^3+1484787178 t^4+40849427 t^5+t^6)/(57055600+196815237 t+720038392 t^2+1147743761 t^3+13266943 t^4+1085638404 t^5+266323194 t^6+1836178903 t^7+t^8)],t],Modulus->$P]
+
+
+
+
+
+
+
+
+
+
+
+Get[ToString[StringJoin[HomeDir,"/files/DifferentialOperator.m"]]];
+Get[ToString[StringJoin[HomeDir,"/files/HexaBoxModules.m"]]];
+
+
+
+Expand[sixpointdiff/.PhaseSpacePoints[[5]],Modulus->$P]
+Coefficient[getDifferentialOperator[PhaseSpacePoints[[5]]],ds[Mt2]]
+
+
+Log[FactorsWithPositions2[[testpos]][[2]]/.Fac[n_]:>EvenLetterCandidatesFACS[[n]]]/.Log[x_]:>x//Variables
