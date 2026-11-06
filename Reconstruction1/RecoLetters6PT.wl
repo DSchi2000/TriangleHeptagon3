@@ -299,4 +299,7 @@ FactorsWithPositions2[[testpos]]
 dlogList[[evenpos]]
 
 
+possible6ptfacs
 
+
+diffInvariants

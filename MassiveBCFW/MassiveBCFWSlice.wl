@@ -310,3 +310,108 @@ Export[FileNameJoin[{OutputFolder,"tvars.txt"}],
 Print["Wrote ", Length[tSamples], " samples (one row each) to ", FileNameJoin[{OutputFolder,"phasespacepoints.txt"}], " and tvars.txt"];
 Print["Wrote a,b vectors to ", FileNameJoin[{OutputFolder,"aVector.txt"}], " and ", FileNameJoin[{OutputFolder,"bVector.txt"}]];
 Print["basePoint, eta, coeffs are in-session if you want to generate more samples of the SAME slice (same a,b) without rebuilding it."];*)
+
+
+(* ::Section:: *)
+(*Bivariate slice: s(x,y) = a + x b + y c, no cross term*)
+
+
+(* Reuse the SAME reference spinor eta for both directions and pick TWO
+   independent solutions (c,d) of the momentum-conservation/mass system.
+   Because lambda_k(x,y) = lambda_k + (x c_k + y d_k) eta uses one shared eta,
+   the quadratic piece in the bracket expansion is always proportional to
+   <eta eta> = 0 -- regardless of whether it multiplies x^2, x y, or y^2 -- so
+   there is never a cross term: every invariant comes out EXACTLY a + x b + y c.
+   Using two DIFFERENT reference spinors for x and y would instead leave a
+   genuine x*y*<eta eta'> term (a curved/bilinear surface, not a flat plane),
+   which is why this reuses one eta. *)
+
+(* Solve the same linear system as GenerateShiftCoefficients twice, with fresh
+   random free values each time, and check the two solutions aren't (by sheer
+   bad luck) proportional -- that would collapse the plane back to a line.
+   Over $P this has probability ~1/$P, so one retry is already overkill. *)
+GenerateShiftCoefficients2D[baseLines_Association, eta_, fixMasses_:False] := Module[
+	{c,d,ratios,independent},
+	c = GenerateShiftCoefficients[baseLines, eta, fixMasses];
+	d = GenerateShiftCoefficients[baseLines, eta, fixMasses];
+	independent = False;
+	While[!independent,
+		ratios = DeleteDuplicates[MapThread[
+			If[#2===0, Nothing, Mod[#1*PowerMod[#2,-1,$P],$P]]&,
+			{Values[c],Values[d]}
+		]];
+		If[Length[ratios] > 1, independent = True, d = GenerateShiftCoefficients[baseLines, eta, fixMasses]];
+	];
+	{c,d}
+];
+
+LineAtXY[baseLines_,coeffsX_,coeffsY_,eta_,k_,xval_,yval_] := {
+	Mod[baseLines[k][[1]] + (xval*coeffsX[k]+yval*coeffsY[k])*eta, $P],
+	baseLines[k][[2]]
+};
+
+InvariantsAtXY[baseLines_,coeffsX_,coeffsY_,eta_,xval_,yval_] := Module[{p1,p2,p3,p4,p5,p6},
+	p1 = {LineAtXY[baseLines,coeffsX,coeffsY,eta,1,xval,yval]};
+	p2 = {LineAtXY[baseLines,coeffsX,coeffsY,eta,2,xval,yval]};
+	p3 = {LineAtXY[baseLines,coeffsX,coeffsY,eta,3,xval,yval]};
+	p4 = {LineAtXY[baseLines,coeffsX,coeffsY,eta,4,xval,yval]};
+	p5 = {LineAtXY[baseLines,coeffsX,coeffsY,eta,"5a",xval,yval], LineAtXY[baseLines,coeffsX,coeffsY,eta,"5b",xval,yval]};
+	p6 = {LineAtXY[baseLines,coeffsX,coeffsY,eta,"6a",xval,yval], LineAtXY[baseLines,coeffsX,coeffsY,eta,"6b",xval,yval]};
+	<|
+		"mt2" -> Mass2[p5], "mt2b" -> Mass2[p6],
+		"s12" -> Sinv[p1,p2], "s23" -> Sinv[p2,p3], "s34" -> Sinv[p3,p4],
+		"s45" -> Sinv[p4,p5], "s56" -> Sinv[p5,p6], "s16" -> Sinv[p1,p6],
+		"s123" -> Sinv[p1,p2,p3], "s234" -> Sinv[p2,p3,p4], "s345" -> Sinv[p3,p4,p5],
+		"gram15" -> GramDet[{p1,p2,p3,p4,p5}]
+	|>
+];
+
+(* BuildMassiveSlice2D[mt2Val, fixMasses] generates a fresh random bivariate
+   slice and returns an Association:
+     "a","b","c"  -> invariant_k(x,y) = a_k + x*b_k + y*c_k  (Associations over
+                     InvKeysOrdered plus "mt2b")
+     "basePoint","eta","coeffsX","coeffsY" -> underlying data, in case you want
+                     InvariantsAtXY[basePoint,coeffsX,coeffsY,eta,xval,yval]
+                     at more (x,y) later without rebuilding the slice.
+   Usage:
+     res2 = BuildMassiveSlice2D[123456789, False];
+     res2["a"]; res2["b"]; res2["c"] *)
+BuildMassiveSlice2D[mt2Val_:MT2SEED, fixMasses_:FixMasses] := Module[
+	{bp,et,cx,cy,i00,i10,i01,aV,bV,cV},
+	bp = GenerateBasePoint[mt2Val];
+	et = RandSpin[];
+	{cx,cy} = GenerateShiftCoefficients2D[bp, et, fixMasses];
+	i00 = InvariantsAtXY[bp,cx,cy,et,0,0];
+	i10 = InvariantsAtXY[bp,cx,cy,et,1,0];
+	i01 = InvariantsAtXY[bp,cx,cy,et,0,1];
+	aV = Association[# -> i00[#] & /@ Append[InvKeysOrdered,"mt2b"]];
+	bV = Association[# -> Mod[i10[#]-i00[#],$P] & /@ Append[InvKeysOrdered,"mt2b"]];
+	cV = Association[# -> Mod[i01[#]-i00[#],$P] & /@ Append[InvKeysOrdered,"mt2b"]];
+	<|"a"->aV, "b"->bV, "c"->cV, "basePoint"->bp, "eta"->et, "coeffsX"->cx, "coeffsY"->cy|>
+];
+
+(* Self-test, mirroring the univariate one above: plug random (x,y) back into
+   a+x*b+y*c and compare against a direct evaluation -- this simultaneously
+   checks linearity in each variable AND that there is no cross term (a cross
+   term would make this fail at a generic (x,y) even though it would pass at
+   y=0 or x=0 alone). Uncomment to run:
+
+res2 = BuildMassiveSlice2D[MT2SEED, FixMasses];
+Module[{xCheck,yCheck,invCheck,ok,predicted},
+	xCheck = RandomInteger[{2,$P-1}];
+	yCheck = RandomInteger[{2,$P-1}];
+	invCheck = InvariantsAtXY[res2["basePoint"],res2["coeffsX"],res2["coeffsY"],res2["eta"],xCheck,yCheck];
+	ok = True;
+	Do[
+		predicted = Mod[res2["a"][k] + xCheck*res2["b"][k] + yCheck*res2["c"][k], $P];
+		If[predicted =!= invCheck[k], ok = False;
+			Print["BIVARIATE LINEARITY/CROSS-TERM FAILURE on ", k, ": predicted ", predicted, " got ", invCheck[k]]];
+	, {k, InvKeysOrdered}];
+	If[invCheck["gram15"] =!= 0, ok = False; Print["GRAM CONSTRAINT FAILURE: ", invCheck["gram15"]]];
+	If[FixMasses,
+		If[invCheck["mt2"] =!= MT2SEED, ok = False; Print["mt2 not fixed: ", invCheck["mt2"]]],
+		If[invCheck["mt2"] =!= invCheck["mt2b"], ok = False; Print["mt2/mt2b mismatch"]]
+	];
+	If[ok, Print["2D self-test passed: a+x b+y c exact at a random (x,y), no cross term, Gram=0, mt2 handled as requested."]];
+];
+*)

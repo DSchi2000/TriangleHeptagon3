@@ -1,0 +1,197 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{mathtools}
+
+\newcommand{\pp}[2]{p_{#1}\!\cdot\! p_{#2}}
+\newcommand{\code}[1]{\texttt{#1}}
+
+\title{A Square-Root-Free Parametrization of 6-Point Kinematics\\
+\large (four massless legs, two equal-mass legs)}
+\author{TriangleHeptagon3 -- \code{4DBasis} notes}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{Setup and conventions}
+
+We work with six outgoing momenta $p_1,\dots,p_6$ satisfying momentum conservation
+\[
+  p_1+p_2+p_3+p_4+p_5+p_6=0 ,
+\]
+with legs $1$--$4$ massless and legs $5,6$ of equal mass,
+\[
+  p_1^2=p_2^2=p_3^2=p_4^2=0, \qquad p_5^2=p_6^2\equiv m_T^2 \ (\code{mt2}).
+\]
+The standard (redundant) set of Mandelstam invariants used throughout the project is
+\[
+  \texttt{diffInvariants} = \{\,m_T^2,\,s_{12},\,s_{123},\,s_{16},\,s_{23},\,s_{234},\,s_{34},\,s_{345},\,s_{45},\,s_{56}\,\},
+\]
+with $s_{ij}=(p_i+p_j)^2$ and $s_{ijk}=(p_i+p_j+p_k)^2$. These ten numbers are \emph{not} independent: they satisfy exactly one polynomial relation, stored in \code{SetUp/SixPointGram.txt} and referred to below as $G_6=0$.
+
+\section{The problem: the Gram constraint forces a square root}
+
+Any five four-vectors in four-dimensional Minkowski space are linearly dependent, so their $5\times5$ Gram matrix is singular:
+\[
+  G_6 \;\equiv\; \det\big(\pp{i}{j}\big)_{i,j\in\{1,2,3,4,5\}} \;=\; 0 .
+\]
+Written out in terms of the ten named invariants, $G_6$ is a specific polynomial that is \emph{quadratic} in $s_{16}$ (and, in fact, in several of the other invariants too). Solving $G_6=0$ for $s_{16}$ therefore gives
+\[
+  s_{16} \;=\; R(\text{other 9}) \;\pm\; \sqrt{\Delta(\text{other 9})}
+\]
+for some rational function $R$ and polynomial $\Delta$: an unavoidable square root, since the ten invariants are only a redundant, $9$-dimensional description of the true phase space to begin with.
+
+This square root is exactly what the construction below removes: instead of using the ten invariants as coordinates and solving a quadratic constraint among them, we parametrize the momenta directly, so that the constraint is never imposed after the fact -- it is automatically satisfied by the parametrization itself.
+
+\section{Resolution: writing $p_5$ as a combination of $p_1,\dots,p_4$}
+
+Generically, $p_1,p_2,p_3,p_4$ already span the full four-dimensional momentum space. Any fifth momentum is then necessarily a linear combination of them:
+\[
+  \boxed{\;p_5 = c_1\,p_1 + c_2\,p_2 + c_3\,p_3 + c_4\,p_4\;} \tag{$\star$}
+\]
+and momentum conservation fixes $p_6$ linearly, with no root:
+\[
+  p_6 = -(p_1+p_2+p_3+p_4+p_5).
+\]
+Because $(\star)$ makes $p_1,\dots,p_5$ linearly dependent \emph{by construction}, for \emph{any} choice of $c_1,c_2,c_3,c_4$, the Gram determinant $G_6=\det(\pp{i}{j})_{i,j=1}^{5}$ vanishes identically. $G_6=0$ is not an extra condition to impose on $(\star)$ -- it is a consequence of it. (The actual code computes $G_6$ as the Gram determinant of $\{p_6,p_2,p_3,p_4,p_5\}$ with $p_6$ eliminated via momentum conservation; a standard row-operation argument -- adding $p_2+p_3+p_4+p_5$ to the first row/column -- shows this equals $\det(\pp{i}{j})_{i,j=1}^5$ up to an overall sign, so the two statements agree.)
+
+\section{The shape of $p_1,\dots,p_4$: a sixth invariant, $s_{14}$}
+
+Four massless momenta are specified by six independent numbers: the pairwise dot products, equivalently
+\[
+  s_{12},\,s_{13},\,s_{14},\,s_{23},\,s_{24},\,s_{34}.
+\]
+The named invariants supply five of these:
+\[
+  s_{12},\ s_{23},\ s_{34}\ \ (\text{directly}), \qquad
+  s_{13}=s_{123}-s_{12}-s_{23}, \qquad s_{24}=s_{234}-s_{23}-s_{34}.
+\]
+There is no representative of $s_{14}=(p_1+p_4)^2=2\,\pp{1}{4}$ among $\{s_{12},s_{23},s_{34},s_{123},s_{234}\}$: it is exactly the piece of information that used to be hidden inside the $s_{16}$ square root. It must be introduced as a genuinely new, independent symbol.
+
+\section{Master formulas}
+
+Write the dot products of the $p_1,\dots,p_4$ basis as
+\[
+  d_{12}=\tfrac12 s_{12},\quad d_{23}=\tfrac12 s_{23},\quad d_{34}=\tfrac12 s_{34},\quad
+  d_{13}=\tfrac12(s_{123}-s_{12}-s_{23}),\quad d_{24}=\tfrac12(s_{234}-s_{23}-s_{34}),\quad d_{14}=\tfrac12 s_{14}.
+\]
+From $(\star)$, every invariant involving $p_5$ follows by direct expansion. Since $p_i^2=0$ for $i=1,\dots,4$,
+\[
+  m_T^2 = p_5^2 = \sum_{i,j=1}^{4} c_i c_j\, d_{ij}
+  = c_1c_2 s_{12} - c_1c_3(s_{12}\!-\!s_{123}\!+\!s_{23}) + c_2c_3 s_{23} + c_1c_4 s_{14} - c_2c_4(s_{23}\!-\!s_{234}\!+\!s_{34}) + c_3c_4 s_{34}.
+\]
+Note the structure: because $d_{ii}=0$ for all $i$ (masslessness of $p_1,\dots,p_4$), $m_T^2$ has no $c_i^2$ term -- it is linear in each $c_i$ individually, even though it is an overall quadratic (bilinear) form in the four of them jointly.
+
+The remaining three dependent invariants are obtained the same way, each as $(\text{known massless sum})^2+2(\text{known})\!\cdot\! p_5+p_5^2$:
+\begin{align}
+  s_{45} &= (p_4+p_5)^2 = m_T^2 + 2\,p_4\!\cdot\! p_5, \\
+  s_{345} &= (p_3+p_4+p_5)^2 = s_{34} + 2\,(p_3+p_4)\!\cdot\! p_5 + m_T^2, \\
+  s_{16} &= (p_1+p_6)^2 = (p_2+p_3+p_4+p_5)^2 = s_{234} + 2\,(p_2+p_3+p_4)\!\cdot\! p_5 + m_T^2,
+\end{align}
+using $p_1+p_6=-(p_2+p_3+p_4+p_5)$. Finally,
+\[
+  s_{56} = (p_5+p_6)^2 = (p_1+p_2+p_3+p_4)^2 = s_{123}+s_{14}-s_{23}+s_{234},
+\]
+which is \emph{linear}, with no $c_i$-dependence at all -- it is fixed as soon as the shape of $p_1,\dots,p_4$ is fixed. All four of $m_T^2,s_{45},s_{345},s_{16}$ are manifestly rational (in fact polynomial) in
+\[
+  \{\,s_{12},s_{23},s_{34},s_{123},s_{234},s_{14},c_1,c_2,c_3,c_4\,\}.
+\]
+No square root has appeared anywhere.
+
+\section{The one real constraint: $p_5^2=p_6^2$}
+
+Nothing in $(\star)$ forces leg $6$ to have the same mass as leg $5$ -- that is genuine extra physical input, not a kinematic identity. Expanding,
+\[
+  p_6^2-p_5^2 = (p_1+p_2+p_3+p_4)^2 + 2\,p_5\!\cdot\!(p_1+p_2+p_3+p_4),
+\]
+which is manifestly \emph{linear} in $c_1,c_2,c_3,c_4$ jointly: the quadratic $c_ic_j$ pieces of $p_5^2$ and $p_6^2$ cancel identically between the two. Explicitly,
+\begin{multline*}
+  p_6^2-p_5^2 \;=\; s_{123}+s_{14}-s_{23}+s_{234}
+  + c_1\big(s_{123}+s_{14}-s_{23}\big) + c_2\big(s_{12}+s_{234}-s_{34}\big)\\
+  {}+ c_3\big(s_{34}+s_{123}-s_{12}\big) + c_4\big(s_{14}-s_{23}+s_{234}\big) \;=\;0.
+\end{multline*}
+Solving this \emph{linear} equation for $c_4$,
+\[
+  c_4 \;=\; \frac{-s_{123}-s_{14}+s_{23}-s_{234}
+  -c_1(s_{123}+s_{14}-s_{23})-c_2(s_{12}+s_{234}-s_{34})-c_3(s_{34}+s_{123}-s_{12})}
+  {s_{14}-s_{23}+s_{234}},
+\]
+an ordinary division -- never a square root.
+
+\section{The resulting 9-parameter description}
+
+Substituting this $c_4$ into the master formulas of Section~5 leaves $m_T^2,s_{45},s_{345},s_{16}$ as rational functions of exactly
+\[
+  \boxed{\{\,s_{12},\,s_{23},\,s_{34},\,s_{123},\,s_{234},\,s_{14},\,c_1,\,c_2,\,c_3\,\}}
+\]
+-- nine totally free, unconstrained parameters, with $s_{56}=s_{123}+s_{14}-s_{23}+s_{234}$ and no relation of any kind left to satisfy. This matches the expected counting: the ten named invariants carry one relation ($G_6=0$), hence nine independent degrees of freedom; this is simply a different, root-free coordinate system on the same nine-dimensional variety.
+
+In \code{4DBasis/RationalParametrization.wl} this is implemented as \code{mt2Formula}, \code{s45Formula}, \code{s345Formula}, \code{s16Formula}, \code{s56Formula}, \code{massEqualityConstraint}, \code{c4Formula9}, and packaged as the substitution list \code{ReduceTo9Variables} (which also eliminates $c_4$), together with the sampler \code{BuildRationalPoint[]}.
+
+\section{Verification}
+
+Two independent checks confirm the construction:
+\begin{itemize}
+  \item \textbf{Symbolic:} substituting the reduced formulas into the actual $G_6$ polynomial from \code{SetUp/SixPointGram.txt} and calling \code{Together} gives the identically zero polynomial -- not merely zero at sample points, but a true rational-function identity.
+  \item \textbf{Numeric:} sampling \code{BuildRationalPoint[]} many times over the finite field $\mathbb{F}_p$ with $p=2^{31}-1$ always lands exactly on $G_6=0$ (50/50 and later 10/10 independent trials checked). By contrast, the old method -- drawing the other nine invariants at random and solving the quadratic $G_6=0$ for $s_{16}$ over $\mathbb{F}_p$ -- has \emph{no} solution whenever the discriminant is a quadratic non-residue, i.e.\ roughly half the time: a direct, concrete manifestation of the square root this construction avoids.
+\end{itemize}
+
+\section{The inverse map: recovering $(c_1,c_2,c_3,c_4)$ from a known point}
+
+Given a point already expressed in the old, redundant ten invariants (satisfying $G_6=0$, e.g.\ produced the old way), the four dot products $p_5\!\cdot\! p_1,\dots,p_5\!\cdot\! p_4$ are already fully determined:
+\[
+  e_4=\tfrac12(s_{45}-m_T^2),\quad
+  e_3=\tfrac12(s_{345}-s_{34}-s_{45}),\quad
+  e_2=\tfrac12(s_{16}-s_{234}-m_T^2)-e_3-e_4,\quad
+  e_1=-\tfrac12 s_{56}-e_2-e_3-e_4.
+\]
+Inverting the (generically invertible) Gram matrix $\big(d_{ij}\big)_{i,j=1}^4$ of the basis $p_1,\dots,p_4$ against $(e_1,e_2,e_3,e_4)$ gives a \emph{unique} $(c_1,c_2,c_3,c_4)$ -- there is no leftover freedom, since a point on $G_6=0$ pins $p_5$ down completely. This is implemented as \code{CoefficientRulesFromInvariants} / \code{CoefficientsAt[\ ]} and verified to round-trip exactly (\code{VerifyInverseMap[\ ]}).
+
+This construction was independently discovered, for the \emph{same} external kinematics (identical \code{mandelstam\_scalarproducts.txt} conventions), in a different loop-topology project's \code{sector239Basis.wl} (\texttt{kinematicRules239}). The $c_1,c_2,c_3$ obtained there were checked to agree with the ones derived here \emph{as exact rational-function identities}; that file omits $c_4$ because it never needs it on its own, not because it is somehow absent.
+
+\paragraph{A simplification.} Since $p_4^2=0$, $m_T^2=p_5^2$ is already \emph{linear} in $c_4$ alone, so $c_4$ can be read off directly from $m_T^2=p_5^2$ (holding $c_1,c_2,c_3$ and the named invariants fixed) instead of inverting the full $4\times4$ system:
+\[
+  c_4 \;=\; \frac{-m_T^2 + c_1c_2 s_{12} - c_1c_3 s_{12} + c_1c_3 s_{123} - c_1c_3 s_{23} + c_2c_3 s_{23}}
+  {c_1 s_{123} - c_1 s_{23} + c_2 s_{23} + c_1 s_{234} - c_2 s_{234} + c_2 s_{34} - c_3 s_{34} - c_1 s_{56}},
+\]
+dramatically shorter than the corresponding entry obtained by Cramer's rule on the full system, and checked numerically to agree with it on many independent finite-field points.
+
+\section{Alternative bases: trading a shape invariant for $m_T^2$}
+
+In the 9-parameter set of Section~7, $m_T^2$ is a \emph{derived} quantity -- a specific function of the nine free parameters. It is natural to ask whether $m_T^2$ can instead be one of the free parameters, with something else derived. Checking the degree of (the reduced) $m_T^2$ in each of the nine:
+\[
+  \begin{array}{ll}
+    c_1,\,c_2,\,c_3,\,s_{14},\,s_{23},\,s_{34},\,s_{234} & \text{degree } 2 \\[2pt]
+    s_{12},\,s_{123} & \text{degree } 1
+  \end{array}
+\]
+Only $s_{12}$ and $s_{123}$ sit at degree 1: these are the \emph{only} two that can be traded for $m_T^2$ without reintroducing a square root. In particular $c_4$ was \emph{never} a candidate for this swap -- it is not one of the 9 free parameters to begin with, having already been eliminated by the unrelated mass-equality constraint of Section~6 -- and $s_{14}$ cannot be traded either, despite being the "extra" invariant introduced in Section~4: it is genuinely quadratic in the $m_T^2$ relation, exactly like $c_1,c_2,c_3,s_{23},s_{34},s_{234}$.
+
+This gives two further valid, fully rational 9-parameter bases:
+\begin{align*}
+  \{\,m_T^2,\,s_{23},\,s_{34},\,s_{123},\,s_{234},\,s_{14},\,c_1,\,c_2,\,c_3\,\} &\qquad (s_{12}\text{ dropped}),\\
+  \{\,m_T^2,\,s_{12},\,s_{23},\,s_{34},\,s_{234},\,s_{14},\,c_1,\,c_2,\,c_3\,\} &\qquad (s_{123}\text{ dropped}),
+\end{align*}
+implemented as \code{ReduceTo9VariablesKeepMt2} and \code{ReduceTo9VariablesKeepMt2AndS12} respectively, each verified the same way as Section~8 (exact symbolic vanishing of $G_6$), together with matching flat kinematic-rule files \code{kinematicRulesTH3KeepMt2.txt} and \code{kinematicRulesTH3KeepMt2AndS12.txt}.
+
+\section{Summary}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{@{}lll@{}}
+\toprule
+Free 9-parameter basis & Derived quantities & File object \\
+\midrule
+$s_{12},s_{23},s_{34},s_{123},s_{234},s_{14},c_1,c_2,c_3$ & $m_T^2,s_{16},s_{45},s_{345},s_{56},c_4$ & \code{ReduceTo9Variables} \\
+$m_T^2,s_{23},s_{34},s_{123},s_{234},s_{14},c_1,c_2,c_3$ & $s_{12},s_{16},s_{45},s_{345},s_{56},c_4$ & \code{ReduceTo9VariablesKeepMt2} \\
+$m_T^2,s_{12},s_{23},s_{34},s_{234},s_{14},c_1,c_2,c_3$ & $s_{123},s_{16},s_{45},s_{345},s_{56},c_4$ & \code{ReduceTo9VariablesKeepMt2AndS12} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent In every case: nine free, unconstrained parameters; zero square roots; $G_6=0$ holds as an algebraic identity, not an equation left to solve.
+
+\end{document}
