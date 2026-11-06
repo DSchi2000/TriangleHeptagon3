@@ -383,6 +383,51 @@ VerifyReduceTo9S56[] := Module[{dir,G6},
 
 
 (* ::Section:: *)
+(*Changing variables in a differential: f_i ds_i (old) -> g_j dc_j (new)*)
+
+
+(*If you have a one-form Sum_i f_i ds_i written in the old (redundant)
+Mandelstams and want it in any of the 9-variable bases above, this is just
+the chain rule applied term by term -- no shortcuts, no Gram constraint
+subtlety, because every old invariant is now an EXPLICIT, unambiguous
+function of the new ones (unlike the old system, where G6=0 only fixes s16
+up to a sign/root and you'd need ChangeAuxVarInDe-style bookkeeping of that
+ambiguity). For s_i(c_1,...,c_9) a genuine function (given by substRules,
+e.g. ReduceTo9VariablesS56 -- note variables already in newVars, like s12,
+pass through substRules unchanged, which is exactly d(s12)/d(s12)=1 etc.):
+
+	ds_i = Sum_j (d s_i/d c_j) dc_j
+	=>  Sum_i f_i ds_i = Sum_j [ Sum_i f_i (d s_i/d c_j) ] dc_j = Sum_j g_j dc_j
+
+i.e. g = f . J where J_ij = d(s_i)/d(c_j) is the Jacobian. Note f_i itself is
+generally a function of the OLD variables too, so it must be re-expressed in
+the new ones (via substRules) before/as part of the contraction -- this is
+the step that's easy to forget.*)
+
+TransformDifferential[fRules_List, substRules_List, newVars_List] := Module[
+	{oldVars, jac, fInNew, gVals},
+	oldVars = fRules[[All,1]];
+	fInNew = fRules[[All,2]] /. substRules;  (* f_i re-expressed in the new vars *)
+	jac = Table[D[var /. substRules, nv], {var, oldVars}, {nv, newVars}];
+	gVals = fInNew . jac;
+	Thread[newVars -> gVals]
+];
+
+(* Usage, e.g. for the s56-based basis:
+	fRules = {mt2 -> f1, s12 -> f2, s123 -> f3, s16 -> f4, s23 -> f5,
+	          s234 -> f6, s34 -> f7, s345 -> f8, s45 -> f9, s56 -> f10};
+	gRules = TransformDifferential[fRules, ReduceTo9VariablesS56,
+	          {s12,s23,s34,s123,s234,s56,c1,c2,c3}]
+gRules is then {s12->g1,...,c3->g9} with Sum_i fi dsi === Sum_j gj d(newVar_j)
+EXACTLY (checked against direct gradients of concrete test functions, both a
+hand-built one and one depending on all 10 diffInvariants -- both reproduce
+D[F/.ReduceTo9VariablesS56, newVar] exactly for every newVar). Works
+identically for ReduceTo9Variables, ReduceTo9VariablesKeepMt2, or
+ReduceTo9VariablesKeepMt2AndS12 -- just pass the matching rule list and
+newVars (9 free variables of that basis). *)
+
+
+(* ::Section:: *)
 (*Inverse map: recover c1,c2,c3,c4 from an already-consistent named-invariant point*)
 
 

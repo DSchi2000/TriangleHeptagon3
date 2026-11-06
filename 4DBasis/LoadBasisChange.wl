@@ -192,9 +192,9 @@ c4sol=Solve[Test[[4]]==mt2,c4][[1]]
 solmands=Thread[Rule[{s16,s345,s45},Together[newParaMands/.solc4]]]
 
 
-KinematicRulesForward=Join[cvals[[;;-2]]]
+KinematicRulesForward=Join[Thread[Rule[{s12, s23, s34, s123, s234, s56},{s12, s23, s34, s123, s234, s56}]],cvals[[;;-2]]]
 
-KinematicRulesBackWards=SortBy[Join[sol10thmand,solmands],First]
+KinematicRulesBackWards=SortBy[Join[Thread[Rule[{s12, s23, s34, s123, s234, s56},{s12, s23, s34, s123, s234, s56}]],sol10thmand,solmands],First]
 
 
 (* ::Subsection:: *)
@@ -226,14 +226,10 @@ DiffNumbers
 KinematicRulesBackWards[[All,1]]
 
 
-K=Together[Table[D[KinematicRulesForward[[i,2]],var],{i,1,3},{var,{mt2,s345,s45}}]]
+J=Expand[Table[D[KinematicRulesBackWards[[i,2]],var],{i,{1,2,3,5,6,7,8,9,10}},{var,variablesNew}]/.tpointNewPara,Modulus->$P]
+f=DiffNumbers[[Flatten[Map[Position[diffInvariants,#]&,{mt2,s12,s123,s23,s234,s34,s345,s45,s56}]]]]
+NewDiff=Expand[Transpose[J] . f,Modulus->$P]
 
 
-KN=Expand[K/.Tpoint,Modulus->$P]
-KNINV=Inverse[KN,Modulus->$P]
-f=DiffNumbers[[Flatten[Map[Position[diffInvariants,#]&,{mt2,s345,s45}]]]]
-Expand[KNINV . f,Modulus->$P]
-
-
-func2=Together[func/.KinematicRulesBackWards]
-DiffNumbers2=Expand[Table[D[func,diffInvariants[[i]]]+sixpfacs[[i]]D[func,s16],{i,1,Length[sixpfacs]}]/.Tpoint,Modulus->$P];
+func2=Together[func/.KinematicRulesBackWards];
+DiffNumbers2=Expand[Table[D[func2,variablesNew[[i]]],{i,1,Length[variablesNew]}]/.tpointNewPara,Modulus->$P]
