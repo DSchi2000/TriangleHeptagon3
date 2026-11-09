@@ -115,7 +115,7 @@ setup[[3]]
 testpos=Flatten[Position[FactorsWithPositions[[All,1]],setup[[1]]]]//First
 FactorsWithPositions2[[testpos]]
 evenpos=FactorsWithPositions2[[testpos]][[1]];
-var=s12
+var=s23
 
 EqnConstFull=Sum[D[G6,var] ds[var],{var,diffInvariants}];
 diffauxvar=First[Solve[EqnConstFull==0,ds[s16]]];

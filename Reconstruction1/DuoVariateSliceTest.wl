@@ -32,4 +32,14 @@ SlicedFactors=Factor[possible6ptfacs/.SliceRepls,Modulus->$P]
 SortBy[Map[FactorList[#][[All,1]]&,SlicedFactors]//Flatten//Tally,Last]
 
 
+P=8*mt2^2*s123*s23*s56 + 125*mt2^2*s345^2*s45 - 96*mt2*s12*s123^2*s45 - 76*mt2*s12*s123*s34*s45 - 36*mt2*s12*s23*s234*s345 + 90*mt2*s123*s16^2*s34 + 106*mt2*s16*s23*s45^2 + 120*mt2*s16*s234*s345*s56 - mt2*s23*s234*s34*s56 - 53*mt2*s234*s34^2*s345 + 108*mt2*s345*s45*s56^2 - 117*s12*s123*s234*s34^2 + 2*s12*s16*s23*s234*s345 - 96*s12*s16*s23*s34^2 + 54*s12*s23*s34*s345*s56 + 36*s12*s234^2*s34*s345 - 69*s123*s234^2*s56^2 + 46*s23*s34*s345*s45^2
+
+
+P//Variables
+
+
+Factor[P/.SliceTpoint,Modulus->$P]
+Factor[P/.SliceRepls,Modulus->$P]
+
+
 

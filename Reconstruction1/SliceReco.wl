@@ -215,7 +215,10 @@ ELSclice//Length
 EvenLetterCandidatesFACS//Length
 
 
+EvenLetterCandidatesFACSNew[[-1]]
 
+
+NewDlogs3
 
 
 (* ::Subsection:: *)
