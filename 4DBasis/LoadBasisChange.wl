@@ -1,6 +1,5 @@
 (* ::Package:: *)
 
-
 If[$FrontEnd===Null,$DIR=Directory[],$DIR=NotebookDirectory[]];
 parts = FileNameSplit[$DIR];
 pos = First@FirstPosition[parts, "TriangleHeptagon3"];

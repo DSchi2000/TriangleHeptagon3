@@ -22,6 +22,8 @@ c3->(mt2 s12^2 s23-2 mt2 s12 s123 s23+s12 s123 s16 s23+mt2 s12 s23^2-mt2 s12^2 s
 
 
 ConvertPointToMands[tpoint_]:=Thread[Rule[diffInvariants,Expand[{mt2,s12,s123,s16,s23,s234,s34,s345,s45,s56}/.KinematicRulesBackWards/.tpoint/.Expand[KinematicRulesBackWards[[1]]/.tpoint,Modulus->$P],Modulus->$P]]]
+ConvertMandsToPoint[tpoint_]:=Thread[Rule[paravars,Expand[paravars/.KinematicRulesForward/.tpoint,Modulus->$P]]];
+
 ConvertDF[dfunc_,tpoint_]:=Module[{J,f},
 J=Expand[Table[D[KinematicRulesBackWards[[i,2]],var],{i,{1,2,3,5,6,7,8,9,10}},{var,{s12,s23,s34,s123,s234,s56,c1,c2,c3}}]/.tpoint,Modulus->$P];
 f=dfunc[[Flatten[Map[Position[{mt2,s12,s123,s16,s23,s234,s34,s345,s45,s56},#]&,{mt2,s12,s123,s23,s234,s34,s345,s45,s56}]]]];

@@ -161,9 +161,6 @@ Factor[Integrand[[1]],Modulus->$P]
 (*	mt2: 5/6*)
 
 
-
-
-
 dlogList[[-1]]/.Log[x_]:>Factor[x,Modulus->$P]
 Factor[D[dlogList[[-2]],t],Modulus->$P]
 

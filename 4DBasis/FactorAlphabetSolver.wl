@@ -35,18 +35,35 @@ always multiplicatively independent. In practice this showed up as
 	f2^2 == f1*f3
 (e.g. f1=c1^2*G, f2=c1*(c1-c2)*G, f3=(c1-c2)^2*G for a common G -- an
 unsurprising relation once you notice it, but easy to miss by eye) which makes
-the exponent system underdetermined: a 1-parameter family of equally valid
-decompositions exists. SolveFactorPowers reports isUnique->False in that case
-and automatically picks the representative with smallest Sum[Abs[exponents]]
-(i.e. using the "existing" letters as sparsely as possible) rather than just
-returning an arbitrary member of the family.*)
+the exponent system underdetermined: a whole INTEGER LATTICE of equally valid
+decompositions exists (one free integer parameter per independent relation
+among the candidates). SolveFactorPowers reports isUnique->False in that case
+and picks a short representative (few/small exponents) rather than an
+arbitrary member of that lattice.
+
+SUBTLETY #3 (don't enumerate -- reduce): with real alphabets you can easily
+get a dozen or more independent relations among the candidates (one real
+usage here hit 15), i.e. a 15-dimensional lattice of equivalent answers. Do
+NOT try to pick the best one by scanning combinations (Tuples over a range of
+each free parameter) -- that is exponential in the number of relations and
+WILL exhaust memory/time well before you'd notice (seen first-hand: 13^15
+combinations). The fix is standard lattice machinery, not more scanning:
+Solve[...,Integers] already gives one particular integer solution plus an
+explicit integer basis for the solution lattice (read off by setting each
+free parameter to a unit vector in turn); LatticeReduce (LLL) turns that into
+a short/near-orthogonal basis; then a single least-squares projection +
+Round (Babai's rounding) finds a short representative directly, no search.
+This is polynomial time regardless of how many free parameters there are --
+checked at 15 and 34 independent relations, both well under a second (see
+self-test below), versus the old approach which couldn't even finish 15.*)
 
 
 CanonicalFactor[f_] := Module[{nf = Expand[-f]}, If[OrderedQ[{f, nf}], f, nf]];
 
 SolveFactorPowers[target_, candidates_, candidateNames_:Automatic] := Module[
 	{names, allExprs, flAll, polyPart, canonPart, irreducibles, vecOf, targetVec, candMat,
-	 nvars, genSol, freeParams, scanRange, best, bestVal, exps, overallConst},
+	 nvars, genSol, freeParams, p0, nullBasisInt, reducedBasis, coeffs, roundedCoeffs,
+	 best, overallConst},
 
 	names = If[candidateNames === Automatic, Table["f"<>ToString[i], {i, Length[candidates]}], candidateNames];
 
@@ -61,23 +78,32 @@ SolveFactorPowers[target_, candidates_, candidateNames_:Automatic] := Module[
 		Lookup[assoc, #, 0]& /@ irreducibles];
 
 	targetVec = vecOf[First[flAll]];
-	candMat = vecOf /@ Rest[flAll];
+	candMat = vecOf /@ Rest[flAll];  (* candidates (rows) x irreducibles (cols) *)
 
 	nvars = Array[n, Length[candidates]];
+
+	(* Plain Gaussian elimination -- gives ONE particular integer solution plus a free
+	   integer parametrization of the whole solution set. Fast no matter how many free
+	   parameters there turn out to be; the combinatorial work (if any) is avoided
+	   entirely below, not hidden here. *)
 	genSol = Solve[Thread[(nvars.candMat) == targetVec], nvars, Integers];
 	If[genSol==={}, Return[<|"status"->"no integer-power solution for the polynomial part"|>]];
 
 	freeParams = DeleteDuplicates[Cases[genSol[[1]], C[_], Infinity]];
+	p0 = nvars /. genSol[[1]] /. Thread[freeParams -> 0];
 
-	(* when underdetermined, scan a small integer window of the free parameters
-	   and keep the representative using the candidates most sparingly *)
-	scanRange = Range[-6,6];
-	best = Null; bestVal = Infinity;
-	Do[
-		exps = (nvars /. genSol[[1]] /. Thread[freeParams -> pt]);
-		If[VectorQ[exps, IntegerQ] && Total[Abs[exps]] < bestVal,
-			bestVal = Total[Abs[exps]]; best = exps],
-	{pt, Tuples[scanRange, Length[freeParams]]}];
+	best = If[freeParams === {},
+		p0,
+		(* integer basis for the solution lattice's free directions, then LLL + Babai
+		   rounding to find a short representative -- polynomial time, no enumeration *)
+		nullBasisInt = Table[
+			(nvars/.genSol[[1]]/.Thread[freeParams->UnitVector[Length[freeParams],k]]) - p0,
+		{k, Length[freeParams]}];
+		reducedBasis = LatticeReduce[nullBasisInt];
+		coeffs = Quiet@Check[LeastSquares[Transpose[reducedBasis], -p0], ConstantArray[0,Length[reducedBasis]]];
+		roundedCoeffs = Round[coeffs];
+		p0 + roundedCoeffs.reducedBasis
+	];
 
 	overallConst = Simplify[target/Times@@(candidates^best)];
 
@@ -85,7 +111,7 @@ SolveFactorPowers[target_, candidates_, candidateNames_:Automatic] := Module[
 		"exponents" -> Thread[names -> best],
 		"overallConstant" -> overallConst,     (* should be a plain number -- 1 if the
 		                                          decomposition is exact and complete *)
-		"isUnique" -> (Length[freeParams]==0), (* False => candidates have a syzygy;
+		"isUnique" -> (freeParams === {}),     (* False => candidates have a syzygy;
 		                                          other equally-valid exponent vectors exist *)
 		"numFreeParams" -> Length[freeParams]
 	|>

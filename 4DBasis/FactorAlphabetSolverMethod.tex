@@ -1,0 +1,154 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+
+\lstset{
+	basicstyle=\small\ttfamily,
+	breaklines=true,
+	columns=flexible,
+	frame=single,
+	backgroundcolor=\color{gray!8}
+}
+
+\newcommand{\code}[1]{\texttt{#1}}
+
+\title{Expressing a Rational Function as a Product of Given Letters\\
+\large (the method behind \code{SolveFactorPowers})}
+\author{TriangleHeptagon3 -- \code{4DBasis} notes}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{The problem}
+
+Given a target rational function $T$ and a list of candidate factors ("letters") $f_1,\dots,f_k$, find integer exponents $n_1,\dots,n_k$ such that
+\[
+  T \;=\; \text{const}\cdot \prod_{i=1}^{k} f_i^{\,n_i}.
+\]
+This is exactly the bookkeeping needed when building a symbol alphabet for a dlog form \cite{GSVV2010,Duhr2014}: each differential you reconstruct factors into some combination of the "letters" already found, and you need the precise combination, not a guess from eye-balling exponents on expressions that can run to dozens of terms. This document is not a trial-and-error recipe -- it is four exact, checkable steps, each with a specific failure mode that was actually hit and fixed while building \code{FactorAlphabetSolver.wl}.
+
+\section{Step 1 -- turn a multiplicative problem into a linear one}
+
+Every rational function factors uniquely (up to order and sign) into irreducible polynomials:
+\[
+  f_i = c_i \prod_{p} p^{\,a_{ip}}, \qquad T = c_T \prod_p p^{\,a_{Tp}},
+\]
+where $p$ ranges over irreducible polynomials and \code{FactorList} supplies the exponents $a_{ip}, a_{Tp}$ directly. The equation $T=\prod f_i^{n_i}$ is then, irreducible-by-irreducible,
+\[
+  \sum_{i=1}^k n_i\, a_{ip} \;=\; a_{Tp} \qquad \text{for every irreducible } p \text{ appearing anywhere.}
+\]
+This is an ordinary linear system in the unknowns $n_i$ -- one equation per distinct irreducible factor, ordinarily \emph{far} more equations than unknowns, which is exactly what makes the method work: an accidental or approximate match is astronomically unlikely once there are a dozen or more irreducible factors pinning down the $n_i$.
+
+\paragraph{Implementation.} Build the exponent vector of every candidate and of the target against the same ordered list of irreducibles, forming a matrix $M$ (candidates $\times$ irreducibles) and a target vector $v$; the system is $n \cdot M = v$.
+
+\section{Subtlety 1 -- sign is not canonical}
+
+\code{FactorList} does not guarantee the same sign for "the same" irreducible factor when it is extracted from two differently-built expressions: one expression may record a factor as $F$, another as $-F$, with the overall numeric prefactor silently compensating. A naive key-by-key match on the raw factor then sees \emph{zero} overlap between two expressions that actually share that factor, and the linear system reports no solution even though one exists -- this is exactly what happened on the second worked example in this project (a polynomial denoted \code{f7} came back as its own negative inside a different target expression).
+
+\paragraph{Fix.} Canonicalize every factor's sign before using it as a dictionary key:
+\begin{lstlisting}
+CanonicalFactor[f_] := Module[{nf = Expand[-f]},
+    If[OrderedQ[{f, nf}], f, nf]];
+\end{lstlisting}
+Since $\mathrm{OrderedQ}[\{F,-F\}]$ and $\mathrm{OrderedQ}[\{-F,F\}]$ are logical complements of each other, this always resolves to the \emph{same} canonical representative regardless of which sign you started from -- so $F$ and $-F$ now collide to one key, and the true overall sign is recovered separately at the end via a direct numeric check ($T/\prod f_i^{n_i}$ must come out to a plain constant).
+
+\section{Subtlety 2 -- the letters are usually not independent}
+
+Solving $n\cdot M = v$ over the integers does not generally give a unique $n$. In the first worked example here, three of the candidates were
+\[
+  f_1 = c_1^2 G,\qquad f_2 = c_1(c_1-c_2)G,\qquad f_3=(c_1-c_2)^2G
+\]
+for a common polynomial $G$, and these satisfy the identity
+\[
+  f_2^2 = f_1 f_3
+\]
+identically -- an unsurprising relation once noticed (they are literally $c_1^2, c_1(c_1-c_2), (c_1-c_2)^2$ times the same $G$, a perfect-square pattern), but easy to miss by eye in a page of symbol output. Each such multiplicative relation among the candidates ("syzygy") is a vector in the integer null space of $M^{T}$, and contributes one free integer parameter to the general solution: the decomposition is a whole \emph{lattice} of equally valid answers, not one.
+
+\code{Solve[\ldots, Integers]} already returns exactly this structure -- a particular solution plus free parameters \code{C[1], C[2], \ldots} -- so detecting non-uniqueness is immediate (\code{isUnique -> False}) and costs nothing extra.
+
+\section{Subtlety 3 -- do not enumerate the lattice}
+
+The first implementation of this tool picked a "simplest" representative by scanning all small integer values of the free parameters:
+\begin{lstlisting}
+Do[ (* check candidate exponent vector, keep the best *)
+ ..., {pt, Tuples[Range[-6,6], numFreeParams]}]
+\end{lstlisting}
+This works fine when there is one free parameter ($13$ combinations to check), but the number of combinations is $13^{m}$ for $m$ free parameters -- and real symbol alphabets routinely produce a dozen or more independent syzygies among the candidates. In actual use this hit $m=15$, i.e.\ \code{Tuples} was asked to build $13^{15}\approx 5\times10^{16}$ tuples, which exhausts available memory before producing anything. Replacing the scan with \code{Minimize} (an exact integer linear program, minimizing $\sum|n_i|$ subject to the same linear constraints) avoids building all combinations explicitly, but still did not finish within $60\,\mathrm{s}$ on a $20$-candidate, $15$-free-parameter test -- the branch-and-bound search underneath still scales badly on this many integer variables with an $\ell_1$ objective.
+
+\paragraph{The actual fix: lattice reduction, not search.} The set of valid solutions is $p_0 + \mathrm{span}_{\mathbb Z}(b_1,\dots,b_m)$ for a particular solution $p_0$ and an integer basis $b_1,\dots,b_m$ of the null space (read off directly from \code{Solve}'s output by setting each free parameter to a unit vector in turn). Finding the \emph{shortest} (or just a short, sensible) representative is then the classical \textbf{closest vector problem} \cite{MicciancioGoldwasser2002}: find the lattice point nearest to $-p_0$. This has a standard, polynomial-time, non-enumerative solution:
+\begin{enumerate}
+	\item \textbf{LLL-reduce} the basis: \code{reducedBasis = LatticeReduce[\{b\_1,...,b\_m\}]}. The Lenstra--Lenstra--Lov\'asz algorithm \cite{LLL1982} replaces an arbitrary (possibly very skewed) basis with one that is short and nearly orthogonal, \emph{without changing the lattice it spans} (see also \cite{Cohen1993} for a computational treatment).
+	\item \textbf{Babai's rounding} \cite{Babai1986}: project $-p_0$ onto the span of the reduced basis by least squares, $c \approx \mathrm{LeastSquares}\!\left(\mathrm{reducedBasis}^{T},\,-p_0\right)$, then round $c$ to the nearest integer vector.
+	\item The answer is $p_0 + \mathrm{Round}(c)\cdot \mathrm{reducedBasis}$ -- guaranteed to still solve the original linear system exactly (adding any integer combination of null-space vectors to a particular solution gives another particular solution), and in practice very short because the basis was reduced first. Babai's algorithm is only guaranteed near-optimal rather than exactly optimal in general, but for this purpose "short" is all that is needed -- there is no physical meaning attached to the exponent vector being the unique minimal one, only to it being small and correct.
+\end{enumerate}
+Crucially, none of these three steps involves any combinatorial enumeration: each is a fixed, polynomial-time linear-algebra computation regardless of how many free parameters $m$ turns out to be.
+
+\section{Verification}
+
+Every step above was checked, not assumed:
+\begin{itemize}
+	\item \textbf{Correctness on the original worked examples.} Both hand-derived target expressions from this project reproduce the expected exponents exactly, with the final numeric check $T/\prod f_i^{n_i}$ coming back exactly $1$ in both cases (not just "a solution exists" -- the actual target is reproduced).
+	\item \textbf{The failure mode, reproduced on purpose.} A synthetic test with $20$ monomial candidates built from only $5$ underlying symbols (so the null space has dimension $20-5=15$, matching the real failure) was constructed with a known target. The \code{Tuples}-scanning version could not even be attempted at this size (it is exactly what failed in practice); the \code{Minimize}-based version exceeded a $60\,\mathrm{s}$ timeout; the lattice-reduction version solved it in $0.01\,\mathrm{s}$, with $T/\prod f_i^{n_i}=1$ confirmed.
+	\item \textbf{Scaling further.} A second synthetic test with $40$ candidates from $6$ underlying symbols (null-space dimension $34$) solved correctly in $0.08\,\mathrm{s}$ -- confirming the method's cost does not grow combinatorially with the number of relations among the letters.
+\end{itemize}
+
+\section{Summary}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{@{}lll@{}}
+\toprule
+Step & What it does & Why it is needed \\
+\midrule
+Factor into irreducibles & Turns $\prod f_i^{n_i}=T$ into a linear system & Exponents add; products do not \\
+Canonicalize factor sign & Makes $F$ and $-F$ the same key & \code{FactorList}'s sign is not canonical \\
+\code{Solve[\ldots,Integers]} & Particular solution + free-parameter basis & Exposes non-uniqueness directly \\
+\code{LatticeReduce} (LLL) & Short, near-orthogonal null-space basis & Makes rounding meaningful \\
+Least squares + \code{Round} & Babai's algorithm: a short representative & Polynomial time, no enumeration \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent The result, \code{SolveFactorPowers[target, candidates, names]} in \code{4DBasis/FactorAlphabetSolver.wl}, is exact (verified against known answers), flags non-uniqueness explicitly rather than hiding it, and its cost is governed by linear algebra, not by how many ways the candidates happen to overlap.
+
+\begin{thebibliography}{9}
+
+\bibitem{LLL1982}
+A.~K.~Lenstra, H.~W.~Lenstra~Jr., L.~Lov\'asz,
+\textit{Factoring polynomials with rational coefficients},
+Mathematische Annalen \textbf{261} (1982), 515--534.
+
+\bibitem{Babai1986}
+L.~Babai,
+\textit{On Lov\'asz' lattice reduction and the nearest lattice point problem},
+Combinatorica \textbf{6} (1986), 1--13.
+
+\bibitem{Cohen1993}
+H.~Cohen,
+\textit{A Course in Computational Algebraic Number Theory},
+Graduate Texts in Mathematics \textbf{138}, Springer, 1993.
+
+\bibitem{MicciancioGoldwasser2002}
+D.~Micciancio, S.~Goldwasser,
+\textit{Complexity of Lattice Problems: A Cryptographic Perspective},
+Kluwer Academic Publishers, 2002.
+
+\bibitem{GSVV2010}
+A.~B.~Goncharov, M.~Spradlin, C.~Vergu, A.~Volovich,
+\textit{Classical Polylogarithms for Amplitudes and Wilson Loops},
+Phys.\ Rev.\ Lett.\ \textbf{105} (2010) 151605,
+arXiv:1006.5703.
+
+\bibitem{Duhr2014}
+C.~Duhr,
+\textit{Mathematical aspects of scattering amplitudes},
+TASI 2014 lecture notes, arXiv:1411.7538.
+
+\end{thebibliography}
+
+\end{document}

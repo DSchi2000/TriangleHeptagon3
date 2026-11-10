@@ -20,6 +20,51 @@ Export[CurrentDir<>"rootsPara.txt",rootsPara]
 
 
 NParrallel=10
-NSamples=1
+NSamples=2;
 PointGeneratorPath=HomeDir<>"/SQRT-Generator";
+Command=PointGeneratorPath<>"/gen_param --roots "<>CurrentDir<>"rootsPara.txt --npoints "<>ToString[NSamples]<>" --out points.txt --threads "<>ToString[NParrallel];
+SetDirectory[CurrentDir];
+Run[Command]
+PTS=Import[CurrentDir<>"/points.txt","Table"];
+PTS = Select[PTS, !StringStartsQ[ToString[#[[1]]], "#"] &][[All,;;-1]];
+
+PTSRPL=Map[Thread[Rule[paravars,#]]&,PTS];
+
+avec=PTSRPL[[1]];
+bvec=PTSRPL[[2]];
+Export["AVECS.txt",{avec,bvec}]
+
+Export["slice_a.txt", {StringRiffle[ToString /@ avec[[All,2]], " "]}, "Lines"];
+Export["slice_b.txt", {StringRiffle[ToString /@ bvec[[All,2]], " "]}, "Lines"];
+
+
+NParrallel=10
+NSamples=200;
 Command=PointGeneratorPath<>"/gen_param --roots "<>CurrentDir<>"rootsPara.txt --npoints "<>ToString[NSamples]<>" --slice slice_a.txt slice_b.txt"<>" --out points.txt --threads "<>ToString[NParrallel];
+Run[Command];
+
+PTS=Import[CurrentDir<>"/points.txt","Table"];
+PTS = Select[PTS, !StringStartsQ[ToString[#[[1]]], "#"] &][[All,;;-1]];
+
+PTSRPL=Map[Thread[Rule[paravars,#]]&,PTS[[All,;;-2]]];
+tvars=Map[Thread[Rule[{tvar},#]]&,PTS[[All,-1]]];
+OutPutPath="Samples";
+(*tpointlist=ParallelTable[ GetTouple[EpsRecoLenth,PTSRPL[[i]]],{i,1,NSamples}];*)
+Export[ToString[StringForm["``/``/tvars.txt",CurrentDir,OutPutPath]],tvars];
+
+
+mandpoints=Map[ConvertPointToMands[#]&,PTSRPL];
+mandpoints=Map[Join[{d->RandomInteger[$P]},#]&,mandpoints];
+
+
+G6=Get[HomeDir<>"/SetUp/SixPointGram.txt"];
+Expand[G6/.mandpoints,Modulus->$P]
+
+
+Export[ToString[StringForm["``/``/CustomPoints.txt",CurrentDir,OutPutPath]],mandpoints];
+
+
+
+
+
+mandpoints[[1]]
