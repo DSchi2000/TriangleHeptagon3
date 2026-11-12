@@ -1,2 +1,2 @@
 Reconstruct eps Dependence
-2.134575
+3.793381

@@ -101,6 +101,7 @@ ELSclice//Length
 EvenLetterCandidatesFACS//Length
 
 
+EvenLetterCandidatesFACS=ttbbFamilyDlog[["EvenLetters"]];
 LettersPara=Factor[EvenLetterCandidatesFACS/.KinematicRulesBackWards]
 
 
@@ -112,7 +113,18 @@ LettersInParametrization=Join[LettersP1,LettersP2]
 LettersInParametrization=LettersInParametrization//DeleteDuplicates
 
 
+
+
+Test=SortBy[LettersInParametrization,Length]
+
+
+Test[[1;;40]]
+
+
 LetterCandidatesSliced=Factor[LettersInParametrization/.SliceTpoint,Modulus->$P];
+
+
+LetterCandidatesSliced//Length
 
 
 LogArg=Dlog/.Log[x_]:>Factor[x,Modulus->$P]
@@ -170,3 +182,83 @@ Expand[KnownLogArg/.phasespacepointsPara[[1]],Modulus->$P]
 
 
 LogFacInMands
+
+
+Factor[LogArg/KnownFacs/.Fac[n_]:>LetterCandidatesSliced[[n]],Modulus->$P]
+
+
+Together[KnownLogArg]
+LogFacInMands
+
+
+KnownLogArg
+LogFacInMands
+
+
+KnownLogArgMyVersion=Get["/home/dschiebe/Documents/PhD-Files/TriangleHeptagon3/Reconstruction-NewPara/KnowLogFac-93-90.txt"];
+
+
+MyFac=Factor[KnownLogArgMyVersion/.KinematicRulesBackWards]
+KnownLogArg
+
+
+RemFacToReco=Factor[MyFac/KnownLogArg]
+RemFacToReco//Variables
+
+
+Expand[Factor[Test=Factor[D[Log[RemFacToReco],s56]]/.SliceTpoint,Modulus->$P],Modulus->$P]
+Test=Factor[D[Log[RemFacToReco],s12]]
+
+
+DuoVariateSlice
+point1=RandomInteger[$P,9]
+point2=RandomInteger[$P,9]
+BiVariateSlice=point1+t Join[point2[[;;-4]],{0,0,0}]+c Join[{0,0,0,0,0,0},point2[[-3;;]]];
+BiVariateSliceTpoint=Thread[Rule[paravars,BiVariateSlice]]
+
+
+Factor[Test/.BiVariateSliceTpoint,Modulus->$P]
+
+
+(* ::Section:: *)
+(*Playground*)
+
+
+Tpoint=SliceTpoint/.t->0
+Factor[Test/.Tpoint[[2;;]],Modulus->$P]
+Expand[Factor[Test/.Tpoint[[Delete[Range[9],9]]],Modulus->$P],Modulus->$P]
+
+Get[CurrentDir<>"AnsatzBuilder.wl"]
+
+
+?BuildRationalAnsatz
+
+
+Factor[BackTransformation=Test/.KinematicRulesForward]
+
+
+avec=ReadList[HomeDir<>"/Reconstruction1/Samples/AVECS.txt"][[1]];
+bvec=ReadList[HomeDir<>"/Reconstruction1/Samples/AVECS.txt"][[2]];
+SliceTpointMand=Thread[Rule[avec[[All,1]],avec[[All,2]]+t bvec[[All,2]]]]
+
+MandsTest=Factor[D[Log[Factor[RemFacToReco/.KinematicRulesForward]],mt2]]
+
+
+Expand[Factor[MandsTest/.SliceTpointMand,Modulus->$P],Modulus->$P]
+
+
+(* ::Section:: *)
+(*Sebastian Letters*)
+
+
+DlogBasis=Get["/home/dschiebe/Downloads/ttbb_family_dlog_bare.m"]
+
+
+Test=Position[ttbbFamilyDlog["EvenMatrices"],{206,206}]
+
+
+ttbbFamilyDlog["EvenMatrices"][[7,363]]
+ttbbFamilyDlog["EvenMatrices"][[86,30]]
+
+
+

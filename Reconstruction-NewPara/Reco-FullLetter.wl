@@ -56,8 +56,8 @@ LinearTerm[usedvars[[i]]]=ReadList[FileNameJoin[{HomeDir,ToString[StringForm["``
 (*Load Samples*)
 
 
-OutPutPaths={"Reconstruction1/Samples/Full-Samples-10000"};
-SplitLengths={2};
+OutPutPaths={"Reconstruction1/Samples/Full-Samples-10000","Reconstruction1/Samples/Full-Samples-10000-2","Reconstruction1/Samples/Full-Samples-10000-3"};
+SplitLengths={2,2,2};
 PhaseSpacePoints={};
 Do[
 phasespacepointsIN=ReadList[FileNameJoin[{HomeDir,ToString[StringForm["``/phasespacepoints.txt",OutPutPaths[[q]]]]}]];
@@ -147,7 +147,7 @@ Integrand[[1]]
 
 
 Get[ToString[StringJoin[HomeDir,"/files/ExtraRecoModules.m"]]];
-Reco=ReconstructOnVariety[fitvec,PhaseSpacePoints[[All,All,2]],diffInvariants,5,6,{G6,s16},Debug->True];
+Reco=ReconstructOnVariety[fitvec,PhaseSpacePoints[[All,All,2]],diffInvariants,7,8,{G6,s16},Debug->True];
 (*Reco=ReconstructAlg[fitvec,PhaseSpacePoints[[All,All,2]],diffInvariants,5,6,{},1,1,Debug->True];*)
 
 
@@ -156,3 +156,59 @@ ReconstructedFunc=Together[Ansatz/.Thread[Rule[Sort[Cases[Ansatz,_fac,Infinity]]
 
 
 ?ReconstructAlg
+
+
+GetNumberOfTermsNeeded[n_,num_,den_]:=Binomial[n + num-1, n-1]+Binomial[n + den-1, n-1]
+
+
+GetNumberOfTermsNeeded[10,6,7]
+
+
+
+
+
+KnowFactor[[2]]
+
+
+Factor[KnowFactor[[3]]/.KinematicRulesBackWards]
+Factor[KnowFactor[[4]]/.KinematicRulesBackWards]
+
+
+Get[HomeDir<>"/4DBasis/Parametrization.m"]
+
+
+Factor[KnowFactor[[7]]/.KinematicRulesBackWards]
+
+
+Factor[KnowFactor[[2]]/.KinematicRulesBackWards]
+
+
+Dlog1=Get["/home/dschiebe/Documents/PhD-Files/TriangleHeptagon3/Reconstruction1/FinishedDlog-94-94.txt"]
+Dlog2=Get["/home/dschiebe/Documents/PhD-Files/TriangleHeptagon3/Reconstruction1/FinishedDlog-95-95.txt"]
+
+
+SetA=DeleteElements[FactorList[Dlog1/.Log[x_]:>x][[All,1]],{-1,1}];
+SetB=DeleteElements[FactorList[Dlog2/.Log[x_]:>x][[All,1]],{-1,1}];
+
+
+FullSet=SortBy[DeleteDuplicates[Join[SetA,SetB]],Length]
+
+
+FullSet[[3]]//Variables//Length
+FullSet[[4]]//Variables//Length
+FullSet[[5]]//Variables//Length
+FullSet[[6]]//Variables//Length
+FullSet[[7]]//Variables//Length
+FullSet[[8]]//Variables//Length
+
+
+
+NewPara=Factor[FullSet/.KinematicRulesBackWards]
+FullSet
+
+
+Export[CurrentDir<>"Factors.txt",FullSet]
+Export[CurrentDir<>"FactorsPara.txt",NewPara]
+
+
+

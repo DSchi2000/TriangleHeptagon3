@@ -294,14 +294,16 @@ static void usage(const char* prog) {
         << "  --threads <N>       number of CPU cores      (default: 1)\n"
         << "  --out     <file>    also save to file\n"
         << "  --sqrt              also output square roots of each expression\n"
-        << "  --slice <a> <b>     slice mode: s = a + t*b for random t,\n"
+        << "  --slice  <a> <b>    slice mode:   s = a + t*b     for random t\n"
+        << "  --slice2 <a> <b> <c> bivariate slice: s = a + x*b + y*c for random x, y\n"
+        << "                      (--slice and --slice2 are mutually exclusive;\n"
         << "                      vectors must cover all " << N_VARS << " variables:\n"
-        << "                      s12 s23 s34 s123 s234 s56 c1 c2 c3\n"
+        << "                      s12 s23 s34 s123 s234 s56 c1 c2 c3)\n"
         << "  N                   positional: equivalent to --npoints N\n"
         << "\n"
         << "No Gram constraint is solved here — the parameterization already\n"
-        << "satisfies it, so with no --slice every variable is just sampled\n"
-        << "independently and uniformly.\n";
+        << "satisfies it, so with no --slice/--slice2 every variable is just\n"
+        << "sampled independently and uniformly.\n";
 }
 
 // ── Main ─────────────────────────────────────────────────────────────────────
@@ -313,6 +315,7 @@ int main(int argc, char* argv[]) {
     bool        do_sqrts     = false;
     std::string out_path;
     std::string slice_a_path, slice_b_path;
+    std::string slice2_a_path, slice2_b_path, slice2_c_path;
 
     for (int i = 1; i < argc; i++) {
         std::string a = argv[i];
@@ -322,13 +325,21 @@ int main(int argc, char* argv[]) {
         else if (a == "--seed"    && i+1 < argc) seed         = std::stoull(argv[++i]);
         else if (a == "--threads" && i+1 < argc) n_threads    = std::stoi(argv[++i]);
         else if (a == "--slice"   && i+2 < argc) { slice_a_path = argv[++i]; slice_b_path = argv[++i]; }
+        else if (a == "--slice2"  && i+3 < argc) { slice2_a_path = argv[++i]; slice2_b_path = argv[++i]; slice2_c_path = argv[++i]; }
         else if (a == "--sqrt")  do_sqrts = true;
         else if (a == "--help")  { usage(argv[0]); return 0; }
         else if (isdigit(a[0])) target = std::stoll(a);
     }
 
-    bool slice_mode = !slice_a_path.empty();
+    bool slice_mode  = !slice_a_path.empty();
+    bool slice2_mode = !slice2_a_path.empty();
+    if (slice_mode && slice2_mode) {
+        std::cerr << "Error: --slice and --slice2 are mutually exclusive\n";
+        return 1;
+    }
+
     std::vector<int64_t> vec_a, vec_b;
+    std::vector<int64_t> vec_a2, vec_b2, vec_c2;
     if (slice_mode) {
         try {
             vec_a = load_vec(slice_a_path, N_VARS);
@@ -337,6 +348,15 @@ int main(int argc, char* argv[]) {
             std::cerr << "Error: " << e.what() << "\n"; return 1;
         }
         std::cerr << "Slice mode: s = a + t*b  (t random in GF(p))\n";
+    } else if (slice2_mode) {
+        try {
+            vec_a2 = load_vec(slice2_a_path, N_VARS);
+            vec_b2 = load_vec(slice2_b_path, N_VARS);
+            vec_c2 = load_vec(slice2_c_path, N_VARS);
+        } catch (const std::exception& e) {
+            std::cerr << "Error: " << e.what() << "\n"; return 1;
+        }
+        std::cerr << "Bivariate slice mode: s = a + x*b + y*c  (x, y random in GF(p))\n";
     } else {
         std::cerr << "Full-sample mode: all " << N_VARS << " variables drawn independently\n";
     }
@@ -377,6 +397,7 @@ int main(int argc, char* argv[]) {
         std::string hdr = "#";
         for (int i = 0; i < N_VARS; i++) { hdr += " "; hdr += VAR_NAMES[i]; }
         if (slice_mode) hdr += " t";
+        if (slice2_mode) hdr += " x y";
         if (do_sqrts)
             for (size_t i = 0; i < roots.size(); i++)
                 hdr += " sqrt" + std::to_string(i + 1);
@@ -390,7 +411,7 @@ int main(int argc, char* argv[]) {
         std::mt19937_64 local_rng(seed + (uint64_t)omp_get_thread_num());
         std::uniform_int_distribution<int64_t> local_dist(0, P - 1);
         int64_t local_vars[N_VARS] = {};
-        int64_t local_t = 0;
+        int64_t local_t = 0, local_x = 0, local_y = 0;
 
         while (found.load(std::memory_order_relaxed) < target) {
             trials.fetch_add(1, std::memory_order_relaxed);
@@ -399,6 +420,12 @@ int main(int argc, char* argv[]) {
                 local_t = local_dist(local_rng);
                 for (int k = 0; k < N_VARS; k++)
                     local_vars[k] = addmod(vec_a[k], mulmod(local_t, vec_b[k]));
+            } else if (slice2_mode) {
+                local_x = local_dist(local_rng);
+                local_y = local_dist(local_rng);
+                for (int k = 0; k < N_VARS; k++)
+                    local_vars[k] = addmod(vec_a2[k],
+                                     addmod(mulmod(local_x, vec_b2[k]), mulmod(local_y, vec_c2[k])));
             } else {
                 for (int i = 0; i < N_VARS; i++)
                     local_vars[i] = local_dist(local_rng);
@@ -420,6 +447,7 @@ int main(int argc, char* argv[]) {
                 line += std::to_string(local_vars[i]);
             }
             if (slice_mode) line += ' ' + std::to_string(local_t);
+            if (slice2_mode) line += ' ' + std::to_string(local_x) + ' ' + std::to_string(local_y);
             if (do_sqrts)
                 for (const auto& r : roots) {
                     int64_t v = 0;

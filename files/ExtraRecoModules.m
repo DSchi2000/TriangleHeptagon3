@@ -375,9 +375,10 @@ If[ Length[Facs]>Length[fitvec],Print[ToString[StringForm["Not enough Samples fo
 PhaseSpacePointsRTS=Map[Table[root[roots[[sqn]]]/.#,{sqn,1,Length[roots]}]&,phaseSpacePoints]//.root[x_]:>Expand[x,$P];
 PhaseSpacePointsRTS=MapThread[Join,{phaseSpacePoints[[All,All,2]],PhaseSpacePointsRTS}];
 
-
+phaseSpacePoints[[1,All,1]];
 selectionList=Join[First[Position[phaseSpacePoints[[1,All,1]],var]],Table[i,{i,Length[phaseSpacePoints[[1,All,1]]]+1,Length[phaseSpacePoints[[1,All,1]]]+Length[roots]}]];
 PhaseSpacePointsRTS=PhaseSpacePointsRTS[[All,selectionList]];
+
 
 MatNumiPart=Expand[Table[Table[Times@@PowerMod[PhaseSpacePointsRTS[[i]],AnsatzPowersNumi[[q]],$P],{q,1,Length[AnsatzPowersNumi]}],{i,1,Length[PhaseSpacePointsRTS]}],Modulus->$P];
 AnsatzPowersNumi;
@@ -468,3 +469,64 @@ m31Pow = With[{p = 2^31 - 1}, Compile[{{x, _Integer}, {n, _Integer}}, Module[{xn
 
 (*{8,6,7,6,10,10,-4}/.n_Integer/;n>0:>0*)
 
+
+
+(* ::Section:: *)
+(*Bivariate Reco*)
+
+
+BivariateReconstruction[fitvec_,phaseSpacePoints_,rvars_,powernum_,powerden_]:=Module[{rootAnsatzN,rootAnsatzD,sqs,AnsatzNumerator,AnsatzDenominator,Ansatz,Facs,PhaseSpacePointsRTS,SOlSts2,MatEQN,NullSpaces,solutions,SolutionsFuncs,SqrtApearences,sqn,DelNumi,DelDeno,AnsatzPowersNumi,AnsatzPowersDeno,MatNumiPart,MatDenoPart,vars,selectionList},
+
+(*rootAnsatzN=funcAnsatzN/.fn[n_]:>rt[n];
+rootAnsatzD=funcAnsatzD/.fn[n_]:>rt[n];*)
+
+rootAnsatzN=1;
+rootAnsatzD=1;
+
+AnsatzNumerator=Expand[Sum[rvars[[1]]^n,{n,0,powernum}]*Sum[rvars[[2]]^n,{n,0,powernum}]*rootAnsatzN];
+AnsatzDenominator=Expand[Sum[rvars[[1]]^n,{n,0,powerden}]*Sum[rvars[[2]]^n,{n,0,powerden}]*rootAnsatzD];
+
+(*AnsatzNumerator//Length//Echo;*)
+
+
+vars=Join[rvars,Table[rt[i],{i,1,Length[roots]}]];
+If[ Length[DeleteDuplicates[fitvec]]==1,Return[DeleteDuplicates[fitvec]]];
+AnsatzPowersNumi=CoefficientRules[AnsatzNumerator,vars][[All,1]];
+AnsatzPowersDeno=CoefficientRules[AnsatzDenominator,vars][[All,1]];
+
+AnsatzNumerator=Sum[fac[j]Product[vars[[i]]^AnsatzPowersNumi[[j,i]],{i,1,Length[vars]}],{j,1,Length[AnsatzPowersNumi]}];
+AnsatzDenominator=Sum[fac[j+Length[AnsatzNumerator]]Product[vars[[i]]^AnsatzPowersDeno[[j,i]],{i,1,Length[vars]}],{j,1,Length[AnsatzPowersDeno]}];
+Ansatz=AnsatzNumerator/AnsatzDenominator;
+Facs=Sort[Cases[Ansatz,_fac,Infinity]];
+If[ Length[Facs]>Length[fitvec],Print[ToString[StringForm["Not enough Samples for Ansatz. `` pts required",Length[Facs]]],Return[-1]]];
+
+PhaseSpacePointsRTS=Map[Table[root[roots[[sqn]]]/.#,{sqn,1,Length[roots]}]&,phaseSpacePoints]//.root[x_]:>Expand[x,$P];
+PhaseSpacePointsRTS=MapThread[Join,{phaseSpacePoints[[All,All,2]],PhaseSpacePointsRTS}];
+
+phaseSpacePoints[[1,All,1]];
+selectionList=Join[Flatten[Map[Position[phaseSpacePoints[[1,All,1]],#]&,rvars]],Table[i,{i,Length[phaseSpacePoints[[1,All,1]]]+1,Length[phaseSpacePoints[[1,All,1]]]+Length[roots]}]];
+(*selectionList//Echo;*)
+PhaseSpacePointsRTS=PhaseSpacePointsRTS[[All,selectionList]];
+
+
+MatNumiPart=Expand[Table[Table[Times@@PowerMod[PhaseSpacePointsRTS[[i]],AnsatzPowersNumi[[q]],$P],{q,1,Length[AnsatzPowersNumi]}],{i,1,Length[PhaseSpacePointsRTS]}],Modulus->$P];
+AnsatzPowersNumi;
+PhaseSpacePointsRTS=MapThread[Join,{PhaseSpacePointsRTS,Transpose[{Expand[-fitvec,Modulus->$P]}]}];
+AnsatzPowersDeno=MapThread[Join,{AnsatzPowersDeno,Table[{1},Length[AnsatzPowersDeno]]}];
+
+MatDenoPart=Expand[Table[Table[Times@@PowerMod[PhaseSpacePointsRTS[[i]],AnsatzPowersDeno[[j]],$P],{j,1,Length[AnsatzPowersDeno]}],{i,1,Length[PhaseSpacePointsRTS]}],Modulus->$P];
+
+MatEQN=Expand[MapThread[Join,{MatNumiPart,MatDenoPart}],Modulus->$P];
+
+NullSpaces=NullSpace[MatEQN,Modulus->$P];
+solutions=Map[Thread[Rule[Facs,#]]&,NullSpaces];
+
+DelNumi=Position[AnsatzNumerator/.solutions,0];
+DelDeno=Position[AnsatzDenominator/.solutions,0];
+solutions=Delete[solutions,Join[DelNumi,DelDeno]];
+SolutionsFuncs=Ansatz/.solutions/.rt[n_]:>fn[n];
+If[rootAnsatz===1,
+Return[SolutionsFuncs/.tvar->t]
+];
+Return[DeleteDuplicates[Together[SolutionsFuncs,Modulus->$P]]/.tvar->t]
+]
