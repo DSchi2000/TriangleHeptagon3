@@ -177,3 +177,6 @@ tpoint=Thread[Rule[invariants,tpoints[[1]]]]
 
 diffop=getDifferentialOperator[tpoint];
 Coefficient[diffop,ds[S16]]/.p[n_]:>0
+
+
+DeleteDuplicates[Cases[PureIntegrals,_root,Infinity]]//Length

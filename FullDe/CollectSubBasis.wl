@@ -32,9 +32,9 @@ HomeDir = FileNameJoin[parts[[;;pos ]]];
 SectorDir = FileNameJoin[parts[[;;pos+1]]];
 CurrentDir=$DIR;
 SetDirectory[ParentDirectory[NotebookDirectory[]]];
+Get[FileNameJoin[{Directory[],"files/HexaBoxModules.m"}]];
 HXBISPs=({k[1]+p[2],k[1]+p[3],k[1]+p[4],k[2]+p[6]}/.p4cons)^2
 HXBISPs=Expand[Expand[HXBISPs]/.loopMomentumScalarProducts/.kinematics/.mandelstamScalarProducts]
-Get[FileNameJoin[{Directory[],"files/HexaBoxModules.m"}]];
 Get[FileNameJoin[{Directory[],"files/DifferentialOperator.m"}]];
 
 
@@ -43,6 +43,27 @@ Get[FileNameJoin[{Directory[],"files/DifferentialOperator.m"}]];
 
 
 (* ::Section:: *)
+(*Fix 5 Point Roots*)
+
+
+CanoGramVec={p[1],p[2],p[3],p[4]};
+Momenta={p[1],p[2],p[3],p[4],p[5],p[6]};
+FivePMomenta=Subsets[Momenta,{4}];
+
+TwoLineGrams=Table[Together[16 Det[Table[Expand[vec1 vec2/.p4cons]/.kinematics/.mandelstamScalarProducts,{vec1,momentas},{vec2,CanoGramVec}]]],{momentas,FivePMomenta}];
+Grams=Table[Together[16 Det[Table[Expand[vec1 vec2/.p4cons]/.kinematics/.mandelstamScalarProducts,{vec1,momentas},{vec2,momentas}]]],{momentas,FivePMomenta}];
+Gramrepls=Table[Rule[root[Grams[[i]]],TwoLineGrams[[i]]/root[Grams[[1]]]],{i,1,Length[Grams]}];
+
+
+Tpoints={d->2,mt2->1867986130,s12->400105616,s123->1077685476,s16->1404758163,s23->1154837077,s234->1712394270,s34->934781953,s345->1748259880,s45->661755111,s56->1091626529}
+RationalReconstruct[a_]:=With[{v=LatticeReduce[{{a,1},{$P,0}}][[1]]},v[[1]]/v[[2]]];
+Gramrepls=Table[Rule[root[Grams[[i]]],TwoLineGrams[[i]]/root[Grams[[1]]]],{i,1,Length[Grams]}];
+TESTVEC=Expand[Gramrepls/.Tpoints/.root[x_]:>PowerMod[x,1/2,$P],Modulus->$P]
+BranchChoiceVec=Expand[TESTVEC[[All,1]]/TESTVEC[[All,2]],Modulus->$P]/.n_Integer:>RationalReconstruct[n]
+Gramrepls[[All,2]]=Gramrepls[[All,2]]*BranchChoiceVec;
+
+
+(* ::Section::Closed:: *)
 (*85-86"*)
 
 
@@ -59,7 +80,7 @@ tr5=root[Expand[Det[2*Table[Expand[(GramVec1[[i]] GramVec2[[j]])/.p4cons],{i,2,5
 TestBasis= ep^3 tr5 Collect[ Expand[Together[mu22] HPT3[0, 1, 2, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0]],{_root,_HPT3},Factor];
 
 
-(* ::Section:: *)
+(* ::Section::Closed:: *)
 (*2,5,6,12,13*)
 
 
@@ -99,11 +120,11 @@ test=Cases[SubPureInts[[88]],_HPT3,Infinity]//DeleteDuplicates
 (*Build SubBasis*)
 
 
-FixedBasis=ReadList[CurrentDir<>"/CanonicalizedToDo.wl"];
+(*FixedBasis=ReadList[CurrentDir<>"/CanonicalizedToDo.wl"];
 FixedBasis=Collect[Expand[FixedBasis],{_root,_HPT3},Factor]
 Export[CurrentDir<>"/BasisFixed.txt",FixedBasis]
 
-FixedBasis=ReadList[CurrentDir<>"/BasisFixed.txt"];
+FixedBasis=ReadList[CurrentDir<>"/BasisFixed.txt"];*)
 
 
 SetDirectory[ParentDirectory[NotebookDirectory[]]];
@@ -114,7 +135,8 @@ $P=2^31-1;
 SelectInts=Range[95];
 SelectInts//Length
 SubPureInts=PureIntegralsNew[[SelectInts]];
-SubPureInts[[MissingPos]]=FixedBasis;
+SubPureInts=SubPureInts/.Gramrepls;
+(*SubPureInts[[MissingPos]]=FixedBasis;
 
 SubPureInts=SubPureInts/.root[x_]:>root[Factor[x]];
 SubPureInts=SubPureInts/.root[x_^2]:>x;
@@ -125,7 +147,7 @@ SubPureInts[[2]]=Int[2];
 SubPureInts[[5]]=Int[5];
 SubPureInts[[6]]=Int[6];
 SubPureInts[[12]]=Int[12];
-SubPureInts[[13]]=Int[13];
+SubPureInts[[13]]=Int[13];*)
 
 PureIntegralsOld/.{n_Integer/;n>1:>1,n_Integer/;n<0:>0};
 Sectors=Map[Last[Sort[Cases[{#},_HPT3,Infinity]/.{n_Integer/;n>1:>1,n_Integer/;n<0:>0}]]&,SubPureInts];
@@ -145,7 +167,7 @@ Export[FileNameJoin[{NotebookDirectory[],"Roots.txt"}],Newsqrts];
 Export[FileNameJoin[{NotebookDirectory[],"SubBasis.txt"}],SubPureInts];
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*Roots Fixing*)
 
 
@@ -226,6 +248,4 @@ HXBBasis[[5]]
 
 SubPureInts[[79]]
 SubPureInts[[80]]
-
-
 
