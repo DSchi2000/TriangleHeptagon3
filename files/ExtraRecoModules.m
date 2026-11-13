@@ -110,6 +110,133 @@ PhaseSpacePointsRTS=MapThread[Join,{parsCut,PhaseSpacePointsRTS}];
 
 
 (* ::Section:: *)
+(*Reconstruction on Parametrization:*)
+
+
+Options[ReconstructInhomogineus]={Debug->False};
+ReconstructInhomogineus[fitvecIN_,pars_,dimlessvars_,dimfullvars_,roots : Except[_Rule | _RuleDelayed]: {},funcAnsatzN : Except[_Rule | _RuleDelayed]: 1,funcAnsatzD : Except[_Rule | _RuleDelayed]: 1,opts:OptionsPattern[]]:=
+Module[{rootAnsatzN,AnsatzPowersNumiDF,ordervars,AnsatzPowersNumiDL,AnsatzPowersDenoDF,AnsatzPowersDenoDL,rootAnsatzD,NumiN,DenoN,variables,NROOTS,fitvec,flattpos,NSqrtDegrees,rtsetNNR,PowerMatrixUsed,AnsatzNumi,AnsatzDeno,varsA,AnsatzPowersNumi,AnsatzPowersDeno,AnsatzLengthN,AnsatzLengthD,AnsatzLength,Ansatz,Solset,AnsatzTerms,SampleSize,parsCut,dvec,nusedvars,dropl,MatNumiPart,onevc,parsCutOne,AnsatzPowersDenoOne,MatDenoPart,FinalMat,sol3,solrule,fit,reconstructedFit,usedSQRTS,SqrtDegrees,rootAnsDim,rootAnsMono,varssqrt,PhaseSpacePointsRTS,MatEQN,NullSpaces,solutions,DelNumi,DelDeno,SolutionsFuncs,SqrtApearences},
+	If[OptionValue[Debug]===True,
+		debugFunction=EchoLabel,
+		debugFunction=Function[label,Identity]
+	];
+	If[ Length[DeleteDuplicates[fitvecIN]]==1,Return[{{{DeleteDuplicates[fitvecIN][[1]],1}},fac[1]/fac[2]}]];
+	If[exp1==0 && exp2==0,
+	Return[{0}];
+	];
+	fitvec=fitvecIN;
+	rootAnsatzN=funcAnsatzN/.fn[n_]:>rt[n];
+	rootAnsatzD=funcAnsatzD/.fn[n_]:>rt[n];
+	(*variables=invariants[[2;;]];*)
+	(*vars=dimfullvars[[1]]*);
+	varsA=Join[dimfullvars[[1]],dimlessvars[[1]]];
+    varssqrt=Join[varsA,Table[rt[i],{i,1,Length[roots]}]];
+	""//debugFunction["Building Ansatz"];
+NROOTS=DeleteDuplicates[Cases[roots,_root,Infinity]]/.root[x_]:>x;
+NSqrtDegrees=(ResourceFunction["PolynomialTotalDegree"][#,vars]&/@NROOTS);
+
+rtsetNNR=roots/.Table[Rule[root[NROOTS[[i]]],Power[dimfullvars[[1,1]],NSqrtDegrees[[i]]]],{i,1,Length[NSqrtDegrees]}];
+SqrtDegrees=(ResourceFunction["PolynomialTotalDegree"][#,dimfullvars[[1]]]&/@rtsetNNR);
+rootAnsDim=Replace[MonomialList[rootAnsatzN],n_Integer:>0,{1}]/.Times->Plus/.Thread[Rule[Table[rt[i],{i,1,Length[roots]}],SqrtDegrees]]//Echo;
+rootAnsMono=MonomialList[rootAnsatzN];
+
+
+
+
+(*AnsatzPowersNumi=Flatten[Table[Join[#,CoefficientRules[rootAnsMono[[sqrtPos]],Table[rt[i],{i,1,Length[roots]}]][[1,1]]]&/@FrobeniusSolve[ConstantArray[1,Length[dimfullvars[[1]]]],dimfullvars[[2]]-rootAnsDim[[sqrtPos]]],{sqrtPos,1,Length[rootAnsMono]}],1];
+AnsatzPowersNumi//Echo;*)
+AnsatzPowersNumiDF=FrobeniusSolve[ConstantArray[1,Length[dimfullvars[[1]]]],dimfullvars[[2]]];
+AnsatzPowersNumiDL=Map[Exponent[#,dimlessvars[[1]]]&,MonomialList[Expand[Times@@Table[Sum[c^n,{n,0,dimlessvars[[2]]}],{c,dimlessvars[[1]]}]]]];
+AnsatzPowersNumi=Flatten[Outer[Join, AnsatzPowersNumiDF, AnsatzPowersNumiDL, 1, 1],{1,2}];
+
+(*
+rootAnsDim=Replace[MonomialList[rootAnsatzD],n_Integer:>0,{1}]/.Times->Plus/.Thread[Rule[Table[rt[i],{i,1,Length[roots]}],SqrtDegrees]];
+rootAnsMono=MonomialList[rootAnsatzD];*)
+(*AnsatzPowersDeno=Flatten[Table[Join[#,CoefficientRules[rootAnsMono[[sqrtPos]],Table[rt[i],{i,1,Length[roots]}]][[1,1]]]&/@FrobeniusSolve[ConstantArray[1,Length[vars]],exp2-rootAnsDim[[sqrtPos]]],{sqrtPos,1,Length[rootAnsMono]}],1];
+*)	
+AnsatzPowersDenoDF=FrobeniusSolve[ConstantArray[1,Length[dimfullvars[[1]]]],dimfullvars[[3]]];
+AnsatzPowersDenoDL=Map[Exponent[#,dimlessvars[[1]]]&,MonomialList[Expand[Times@@Table[Sum[c^n,{n,0,dimlessvars[[3]]}],{c,dimlessvars[[1]]}]]]];
+AnsatzPowersDeno=Flatten[Outer[Join, AnsatzPowersDenoDF, AnsatzPowersDenoDL, 1, 1],{1,2}];
+	
+	
+	AnsatzLengthN=Length[AnsatzPowersNumi];
+	AnsatzLengthD=Length[AnsatzPowersDeno];
+	AnsatzLength=AnsatzLengthN+AnsatzLengthD;
+	""//debugFunction[ToString[StringForm["Number of Samples Needed: ``",AnsatzLength]]];
+	
+
+	SampleSize=Length[fitvec];
+		
+	
+	If[AnsatzLength>SampleSize, Print[ToString[StringForm["Not enough Samples for Ansatz. `` pts required",AnsatzLength]]];
+	  Return[-1]];
+
+
+	AnsatzNumi=Sum[fac[j]Product[varssqrt[[i]]^AnsatzPowersNumi[[j,i]],{i,1,Length[varssqrt]}],{j,1,Length[AnsatzPowersNumi]}];
+	AnsatzDeno=Sum[fac[j+Length[AnsatzPowersNumi]]Product[varssqrt[[i]]^AnsatzPowersDeno[[j,i]],{i,1,Length[varssqrt]}],{j,1,Length[AnsatzPowersDeno]}];
+(*	AnsatzDeno=Sum[fac[j+Length[AnsatzPowersNumi]]Product[vars[[i]]^AnsatzPowersDeno[[j,i]],{i,1,Length[vars]}],{j,1,Length[AnsatzPowersDeno]}]//Echo;*)
+
+	Ansatz=AnsatzNumi/AnsatzDeno;
+	(*Return[-1];*)
+	
+	Solset=Sort[Cases[Ansatz,fac[___],Infinity]];
+	
+	fitvec=Drop[fitvec,SampleSize-(AnsatzLength)];
+	If[pars[[1,1]][[0]]==Rule,
+	ordervars=pars[[1,All,1]];
+	parsCut=Drop[pars[[All,All,2]],SampleSize-(AnsatzLength)];
+	parsCut=parsCut[[All,Flatten[Map[Position[ordervars,#]&,varssqrt]]]];
+	,
+	parsCut=Drop[pars,SampleSize-(AnsatzLength)];
+	];
+	""//debugFunction["Ansatz Done"];
+	""//debugFunction["Mapping Phasespacepoints"];
+
+PhaseSpacePointsRTS=Map[Table[root[roots[[sqn]]]/.Thread[Rule[varssqrt,#]],{sqn,1,Length[roots]}]&,parsCut]//.root[x_]:>Expand[x,Modulus->$P];
+PhaseSpacePointsRTS=MapThread[Join,{parsCut,PhaseSpacePointsRTS}];
+PhaseSpacePointsRTS[[-1]]//Echo;
+""//debugFunction["Mapping Phasespacepoints Done"];
+varssqrt//Echo;
+
+(*	
+	nusedvars=Complement[variables,varsA];
+	dropl=Table[Position[variables,nusedvars[[i]]],{i,1,Length[nusedvars]}][[All,All,1]];
+		
+	parsCut=Transpose[Delete[Transpose[parsCut],dropl]];*)
+	""//debugFunction["Constructing Matrix"];
+	MatNumiPart=Parallelize@Outer[m31ExpDot,PhaseSpacePointsRTS,AnsatzPowersNumi,1];
+	fitvec=Expand[-fitvec,Modulus->$P];
+	onevc=Table[{1},AnsatzLengthD];
+	parsCutOne=MapThread[Join,{PhaseSpacePointsRTS,Transpose[{fitvec}]}];
+	AnsatzPowersDenoOne=MapThread[Join,{AnsatzPowersDeno,onevc}];
+	MatDenoPart=Parallelize@Outer[m31ExpDot,parsCutOne,AnsatzPowersDenoOne,1];
+	MatEQN=MapThread[Join,{MatNumiPart,MatDenoPart}];
+	""//debugFunction["Constructing Matrix Done"];
+	""//debugFunction["Computing Nullspace"];
+	NullSpaces=NullSpace[MatEQN,Modulus->$P];
+	""//debugFunction[ToString[StringForm["Computing Nullspace Done, Solutions: ``",Length[NullSpaces]]]];
+	If[ NullSpaces==={},
+	""//debugFunction[ToString[StringForm["No Solution Found"]]];
+	  Return[-1]
+	];
+	NumiN=Expand[{MatNumiPart[[1]]} . Transpose[NullSpaces[[All,;;AnsatzLengthN]]],Modulus->$P];
+    DenoN=Expand[({MatDenoPart[[1,;;-1]]}) . (Transpose[NullSpaces[[All,AnsatzLengthN+1;;-1]]]),Modulus->$P];
+
+   
+    If[exp2===0,DenoN={1}];
+    If[exp1===0,NumiN={1}];
+
+
+    DelNumi=Position[NumiN//First,0];
+	DelDeno=Position[DenoN//First,0];
+	
+	NullSpaces=Delete[NullSpaces,Join[DelNumi,DelDeno]];
+	""//debugFunction[ToString[StringForm["Non trivial solutions: ``",Length[NullSpaces]]]];
+	Return[{NullSpaces,Ansatz}/.rt[n_]:>fn[n]];
+	]
+
+
+(* ::Section:: *)
 (*Reconstruct With indv. Power Constraints*)
 
 
@@ -467,8 +594,24 @@ m31Pow = With[{p = 2^31 - 1}, Compile[{{x, _Integer}, {n, _Integer}}, Module[{xn
 
 
 
-(*{8,6,7,6,10,10,-4}/.n_Integer/;n>0:>0*)
+(* ::Subsection:: *)
+(*Build Function*)
 
+
+BuildFunction[nullspace_,Ansatz_]:=Module[{AnsatzNum,AnsatzDen},
+	AnsatzNum=Numerator[Ansatz];
+	AnsatzDen=Denominator[Ansatz];
+	AnsatzNum=Coefficient[AnsatzNum,Sort[Cases[AnsatzNum,_fac,Infinity]]];
+	AnsatzDen=Coefficient[AnsatzDen,Sort[Cases[AnsatzDen,_fac,Infinity]]];
+	
+	Return[(AnsatzNum . nullspace[[;;Length[AnsatzNum]]])/(AnsatzDen . nullspace[[Length[AnsatzNum]+1;;]])];
+	
+	
+
+(*	NumiN=Expand[{MatNumiPart[[1]]} . Transpose[NullSpaces[[All,;;AnsatzLengthN]]],Modulus->$P];
+    DenoN=Expand[({MatDenoPart[[1,;;-2]]}) . (Transpose[NullSpaces[[All,AnsatzLengthN+1;;-2]]]),Modulus->$P];*)
+
+]
 
 
 (* ::Section:: *)

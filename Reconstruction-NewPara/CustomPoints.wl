@@ -16,7 +16,7 @@ Export[CurrentDir<>"rootsPara.txt",rootsPara]
 PointGeneratorPath=HomeDir<>"/SQRT-Generator";
 
 
-(* ::Section:: *)
+(* ::Section::Closed:: *)
 (*UniVariate-Slice*)
 
 
@@ -40,7 +40,7 @@ Export["slice_b.txt", {StringRiffle[ToString /@ bvec[[All,2]], " "]}, "Lines"];
 
 
 NParrallel=10
-NSamples=200;
+NSamples=50;
 Command=PointGeneratorPath<>"/gen_param --roots "<>CurrentDir<>"rootsPara.txt --npoints "<>ToString[NSamples]<>" --slice slice_a.txt slice_b.txt"<>" --out points.txt --threads "<>ToString[NParrallel];
 Run[Command];
 
@@ -71,7 +71,7 @@ Export[ToString[StringForm["``/``/CustomPoints.txt",CurrentDir,OutPutPath]],mand
 mandpoints[[1]]
 
 
-(* ::Section:: *)
+(* ::Section::Closed:: *)
 (*Bivariate Slice*)
 
 
@@ -135,7 +135,7 @@ mandpoints[[2]]
 
 
 NParrallel=10
-NSamples=5000;
+NSamples=10000;
 SetDirectory[CurrentDir];
 Command=PointGeneratorPath<>"/gen_param --roots "<>CurrentDir<>"rootsPara.txt --npoints "<>ToString[NSamples]<>" --out points.txt --threads "<>ToString[NParrallel];
 Run[Command]

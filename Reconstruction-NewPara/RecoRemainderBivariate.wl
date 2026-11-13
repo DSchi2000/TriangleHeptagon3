@@ -1,5 +1,9 @@
 (* ::Package:: *)
 
+(* ::Section:: *)
+(*Load Files*)
+
+
 If[$FrontEnd===Null,$DIR=Directory[],$DIR=NotebookDirectory[]];
 parts = FileNameSplit[$DIR];
 pos = First@FirstPosition[parts, "TriangleHeptagon3"];
@@ -51,18 +55,23 @@ SliceTpoint=Thread[Rule[avec[[All,1]],avec[[All,2]]+t bvec[[All,2]]]]
 
 
 G6=Get[HomeDir<>"/SetUp/SixPointGram.txt"];
-KnowFactor=Get[CurrentDir<>"KnowLogFac-93-93.txt"];
+KnowFactor=Get[CurrentDir<>"KnowLogFac-93-27.txt"];
 LinearizedEvenPos=Map[GetLinPos[#[[1]],#[[2]],95]&,EvenPos];
 Get[HomeDir<>"/4DBasis/Parametrization.m"]
 KnowFactor=Factor[KnowFactor/.KinematicRulesBackWards]
 
+(*RecoDLog=Get[CurrentDir<>"Dlog-93-93.txt"];
+RecoDLogArg=First[Cases[RecoDLog,_Log,Infinity]]/.Log[x_]:>x*)
 
 
-var=c1
+paravars
+
+
+var=s56
 EqnConstFull=Sum[D[G6,var] ds[var],{var,diffInvariants}];
 diffauxvar=First[Solve[EqnConstFull==0,ds[s16]]];
 sixpointdiff=Coefficient[diffauxvar[[1,2]],ds[var]];
-pos=GetLinPos[93,93,95];
+pos=GetLinPos[93,27,95];
 
 LinearTerm[s16]=SparseArray[ConstantArray[0,{Length[PhaseSpacePoints],1,Length[PureIntegrals]^2}]];
 FitVals=Join[Table[LinearTerm[var][[All,1,pos]],{var,diffInvariants}]];
@@ -71,23 +80,18 @@ phasespacepointsPara=Map[ConvertMandsToPoint[#]&,PhaseSpacePoints];
 phasespacepointsPara=Table[Join[phasespacepointsPara[[i]],tvarlist[[i]]],{i,1,Length[phasespacepointsPara]}];
 
 FitValsPara=Table[ConvertDF[FitVals[[i]],phasespacepointsPara[[i]]],{i,1,Length[FitVals]}];
-
-
-
-
 logRational=1;
-DlogDiff=Map[Expand[logRational  D[ Log[KnowFactor/.Delete[#,Position[paravars,var]]],var]/.#,Modulus->$P]&,phasespacepointsPara];//EchoTiming
+DlogDiff=Map[Expand[logRational  D[ 2Log[ KnowFactor/.Delete[#,Position[paravars,var]]],var]/.#,Modulus->$P]&,phasespacepointsPara];//EchoTiming
 (*DlogDiffs16=Map[Expand[sixpointdiff*logRational  D[Log[KnowFactor/.Delete[#,Position[diffInvariants,s16]]],s16]/.#,Modulus->$P]&,PhaseSpacePoints];//EchoTiming*)
 
 fitvec=FitValsPara[[All,First[Flatten[Position[paravars,var]]]]];
 fitvec=Expand[fitvec-((DlogDiff)),Modulus->$P];
+fitvec
 Get[ToString[StringJoin[HomeDir,"/files/ExtraRecoModules.m"]]];
 (*Integrand=Expand[UniVarReconstructFUNCS[fitvec,phasespacepointsPara,tvar,20,20,{},1,1],Modulus->$P];*)
 Integrand=Expand[BivariateReconstruction[fitvec,phasespacepointsPara,{xvar,yvar},6,6],Modulus->$P]/.{xvar->x,yvar->y};
 Expand[Integrand[[1]],Modulus->$P]
 Factor[Integrand[[1]],Modulus->$P]
-
-
 
 
 
