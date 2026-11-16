@@ -4,11 +4,11 @@
 (*Settings*)
 
 
-NSamples=10000;
+NSamples=200;
 AuxVar=s16;
 $P=2^31-1;
 (*OutPutPath="Samples-1";*)
-OutPutPath="Full-Samples-10000-3";
+OutPutPath="UnivariateSlice-2";
 SliceVar=s16;
 NParrallel=50;
 KIRACores=50;
@@ -17,7 +17,7 @@ MaxCutInts=Range[95];
 reset=True;
 printOut=True;
 AllSectors=True;
-SampleMode="Full"; (*Slice,UVar,Full*)
+SampleMode="UVar"; (*Slice,UVar,Full*)
 SubdVars={mt2,s12,s123,s23,s234,s34,s345,s45,s56};
 DoExtraRelations=True;
 
