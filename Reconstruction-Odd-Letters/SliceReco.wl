@@ -131,8 +131,8 @@ PhaseSpacePoints[[-1]]
 
 
 Get[ToString[StringJoin[HomeDir,"/files/ExtraRecoModules.m"]]];
-pos1=93;
-pos2=3;
+pos1=59;
+pos2=2;
 sqrt1=rootVector[[pos1]]
 sqrt2=rootVector[[pos2]]
 pos=GetLinPos[pos1,pos2,95];
@@ -142,7 +142,7 @@ sqrt2N=PowerMod[sqrt2/.PhaseSpacePoints,1/2,$P];
 FitVals=Join[Table[LinearTerm[var][[All,1,pos]],{var,diffInvariants}]];
 Integrands=Table[Integrand=Expand[UniVarReconstructFUNCS[Expand[FitVals[[varpos]]/(sqrt2N/sqrt1N),Modulus->$P],PhaseSpacePoints,tvar,40,40,{},1,1],Modulus->$P];Factor[Integrand[[1]],Modulus->$P],{varpos,1,10}]
 NewIntDt=Factor[Expand[Integrands . bvec[[All,2]],Modulus->$P],Modulus->$P]
-NewIntDt=NewIntDt*root[sqrt2]/root[sqrt1]/.root[1]->1/.SliceTpoint/.root[x_]:>root[Factor[x,Modulus->$P]]
+NewIntDt=NewIntDt*(root[sqrt2]/root[sqrt1])/.root[1]->1/.SliceTpoint/.root[x_]:>root[Factor[x,Modulus->$P]]
 
 
 (* ::Section:: *)
