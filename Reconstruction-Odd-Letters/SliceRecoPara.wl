@@ -1,6 +1,6 @@
 (* ::Package:: *)
 
-(* ::Section:: *)
+(* ::Section::Closed:: *)
 (*Load Files*)
 
 
@@ -103,7 +103,10 @@ Return[SymFactor];
 ]
 
 
-PrevReco=ReadList[CurrentDir<>"OddLetterReco1AB.txt"];
+PrevReco1=ReadList[CurrentDir<>"OddLetterReco1AB.txt"];
+PrevReco1=Delete[PrevReco1,DeleteDuplicates[Position[PrevReco1,$Failed][[All,1]]]/.n_Integer:>{n}];
+PrevReco2=ReadList[CurrentDir<>"OddLetterReco2AB.txt"];
+PrevReco=SortBy[Join[PrevReco1,PrevReco2],First];
 OddPos=PrevReco[[DeleteDuplicates[Position[PrevReco,$Failed][[All,1]]]]][[All,1]]
 
 
@@ -115,18 +118,18 @@ Transpose[FitVals]
 
 
 Get[ToString[StringJoin[HomeDir,"/files/ExtraRecoModules.m"]]];
-pos1=20;
-pos2=2;
+pos1=94;
+pos2=78;
 sqrt1=rootVector[[pos1]]
 sqrt2=rootVector[[pos2]]
 pos=GetLinPos[pos1,pos2,95];
-sqrt1N=PowerMod[sqrt1/.phasespacepointsPara,1/2,$P];
-sqrt2N=PowerMod[sqrt2/.phasespacepointsPara,1/2,$P];
+sqrt1N=PowerMod[Expand[sqrt1/.phasespacepointsPara,Modulus->$P],1/2,$P];
+sqrt2N=PowerMod[Expand[sqrt2/.phasespacepointsPara,Modulus->$P],1/2,$P];
 
 FitVals=Transpose[Join[Table[LinearTerm[var][[All,1,pos]],{var,diffInvariants}]]];
 FitValsPara=Table[ConvertDF[FitVals[[i]],phasespacepointsPara[[i]]],{i,1,Length[FitVals]}];
 
-Integrands=Table[Integrand=Expand[UniVarReconstructFUNCS[Expand[FitValsPara[[All,varpos]]/(sqrt2N/sqrt1N),Modulus->$P],phasespacepointsPara,tvar,20,20,{},1,1],Modulus->$P];Factor[Integrand[[1]],Modulus->$P],{varpos,1,9}]
+Integrands=Table[Integrand=Expand[UniVarReconstructFUNCS[Expand[FitValsPara[[All,varpos]]/(sqrt2N/sqrt1N),Modulus->$P],phasespacepointsPara,tvar,24,24,{},1,1],Modulus->$P];Factor[Integrand[[1]],Modulus->$P],{varpos,1,9}]
 NewIntDt=Factor[Expand[Integrands . bvec[[All,2]],Modulus->$P],Modulus->$P]
 NewIntDt=NewIntDt*(root[sqrt2]/root[sqrt1])/.root[1]->1/.SliceTpoint/.root[x_]:>root[Factor[x,Modulus->$P]]
 
@@ -142,7 +145,7 @@ PhaseSpacePoints//Length
 Get["/home/daniel/Documents/packages/trager/Trager.wl"]
 roots=DeleteDuplicates[Cases[NewIntDt,_root,Infinity]]
 rootrepls=Thread[Rule[roots,Map[rt[#]&,Range[Length[roots]]]]]
-qring=Expand[Table[rt[i]^2-(roots[[i]]/.root[x_]:>x),{i,Range[Length[roots]]}],Modulus->$P]
+qring=Expand[Table[(roots[[i]]/.root[x_]:>Denominator[x])rt[i]^2-(roots[[i]]/.root[x_]:>Numerator[x]),{i,Range[Length[roots]]}],Modulus->$P];
 rtvars=Table[rt[i],{i,Range[Length[roots]]}]
 invrootrepls = Reverse /@ rootrepls;
 NewIntDt/.rootrepls
@@ -209,15 +212,11 @@ RecoFac=Factor[Expand[OddLetterAB *OddLetterABM]]
 Factor[RecoFac/.SliceTpoint,Modulus->$P]
 
 
-=
-
-
-
-
-
-
 (* ::Section:: *)
 (*SATISFACTORY YEAAAAH*)
+
+
+PowerMod[Expand[rootVector[[64]]/.phasespacepointsPara[[1]],Modulus->$P],1/2,$P]
 
 
 (* ::Subsection:: *)
@@ -225,17 +224,19 @@ Factor[RecoFac/.SliceTpoint,Modulus->$P]
 
 
 Get[ToString[StringJoin[HomeDir,"/files/ExtraRecoModules.m"]]];
-LaunchKernels[5];
-Monitor[IntegrandsMat=ParallelTable[
+(*LaunchKernels[5];*)
+Monitor[IntegrandsMat=Table[
 pos1=matpos[[1]];
 pos2=matpos[[2]];
 sqrt1=rootVector[[pos1]];
 sqrt2=rootVector[[pos2]];
 pos=GetLinPos[pos1,pos2,95];
-sqrt1N=PowerMod[sqrt1/.PhaseSpacePoints,1/2,$P];
-sqrt2N=PowerMod[sqrt2/.PhaseSpacePoints,1/2,$P];
-FitVals=Join[Table[LinearTerm[var][[All,1,pos]],{var,diffInvariants}]];
-Integrands=Table[Integrand=Expand[UniVarReconstructFUNCS[Expand[FitVals[[varpos]]/(sqrt2N/sqrt1N),Modulus->$P],PhaseSpacePoints,tvar,20,20,{},1,1],Modulus->$P];Factor[Integrand[[1]],Modulus->$P],{varpos,1,10}];
+sqrt1N=PowerMod[Expand[sqrt1/.phasespacepointsPara,Modulus->$P],1/2,$P];
+sqrt2N=PowerMod[Expand[sqrt2/.phasespacepointsPara,Modulus->$P],1/2,$P];
+FitVals=Transpose[Join[Table[LinearTerm[var][[All,1,pos]],{var,diffInvariants}]]];
+FitValsPara=Table[ConvertDF[FitVals[[i]],phasespacepointsPara[[i]]],{i,1,Length[FitVals]}];
+Integrands=Table[Integrand=Expand[UniVarReconstructFUNCS[Expand[FitValsPara[[All,varpos]]/(sqrt2N/sqrt1N),Modulus->$P],phasespacepointsPara,tvar,24,24,{},1,1],Modulus->$P];Factor[Integrand[[1]],Modulus->$P],{varpos,1,9}];
+NewIntDt=Factor[Expand[Integrands . bvec[[All,2]],Modulus->$P],Modulus->$P];
 Integrands=Integrands*(root[sqrt2]/root[sqrt1])/.root[1]->1/.SliceTpoint/.root[x_]:>root[Factor[x,Modulus->$P]];
 {matpos,Integrands},{matpos,OddPos}],matpos];
 
@@ -244,7 +245,17 @@ Integrands=Integrands*(root[sqrt2]/root[sqrt1])/.root[1]->1/.SliceTpoint/.root[x
 NewIntDt=NewIntDt*(root[sqrt2]/root[sqrt1])/.root[1]->1/.SliceTpoint/.root[x_]:>root[Factor[x,Modulus->$P]];*)
 
 
-Export[CurrentDir<>"Integrands.txt",IntegrandsMat]
+Export[CurrentDir<>"Integrands-2PARA.txt",IntegrandsMat]
+
+
+DeleteDuplicates[Position[IntegrandsMat,_fac][[All,1]]]
+
+
+(* ::Subsection:: *)
+(*Problems:*)
+
+
+44,64
 
 
 (* ::Subsection:: *)
@@ -253,28 +264,38 @@ Export[CurrentDir<>"Integrands.txt",IntegrandsMat]
 
 (*Integrands=IntegrandsMat[[-5,2]];
 NewIntDt=Factor[Expand[Integrands . bvec[[All,2]],Modulus->$P],Modulus->$P]*)
-
+IntegrandsMat=ReadList[CurrentDir<>"Integrands-2PARA.txt"];
 Get["/home/daniel/Documents/packages/trager/Trager.wl"];
-Monitor[IntegrandsMat=Table[
+Monitor[DlogsTrager=Table[
 Integrands=IntegrandsMat[[pos,2]];
 NewIntDt=Factor[Expand[Integrands . bvec[[All,2]],Modulus->$P],Modulus->$P];
 roots=DeleteDuplicates[Cases[NewIntDt,_root,Infinity]];
 rootrepls=Thread[Rule[roots,Map[rt[#]&,Range[Length[roots]]]]];
-qring=Expand[Table[rt[i]^2-(roots[[i]]/.root[x_]:>x),{i,Range[Length[roots]]}],Modulus->$P];
+qring=Expand[Table[(roots[[i]]/.root[x_]:>Denominator[x])rt[i]^2-(roots[[i]]/.root[x_]:>Numerator[x]),{i,Range[Length[roots]]}],Modulus->$P];
 rtvars=Table[rt[i],{i,Range[Length[roots]]}];
 invrootrepls = Reverse /@ rootrepls;
-NewIntDt/.rootrepls;
+
 Dlog=TragerLogSubtractionNumeric[NewIntDt/.rootrepls,t,rtvars,qring,Modulus->$P];
 Dlog=Dlog/.invrootrepls;
 
 {OddPos[[pos]],Dlog},{pos,Range[Length[OddPos]]}],pos];
 
 
-Export[CurrentDir<>"Dlogs.txt",IntegrandsMat]
+
+exponents=Exponent[Numerator[DlogsTrager/.Log[x_]:>x][[All,2]],t]
+Position[exponents,15]
 
 
-DLogs=ReadList[CurrentDir<>"Dlogs.txt"];
-Integrands=ReadList[CurrentDir<>"Integrands.txt"];
+Export[CurrentDir<>"Dlogs-2PARA.txt",DlogsTrager]
+
+
+FailedPos=Position[DlogsTrager,$Failed]
+
+
+DLogs=DlogsTrager[[Complement[Range[Length[DlogsTrager]],FailedPos[[All,1]]]]];
+
+
+FailedPos=Position[DLogs,$Failed]
 
 
 (* ::Section:: *)
@@ -282,10 +303,22 @@ Integrands=ReadList[CurrentDir<>"Integrands.txt"];
 
 
 EvenLetterCandidates=ReadList[HomeDir<>"/Reconstruction-NewPara/EvenLetterCandidates.txt"];
-EvenLetterCandidates=DeleteDuplicates[Join[EvenLetterCandidates,aFactorsReconstructed]];
+(*EvenLetterCandidates=DeleteDuplicates[Join[EvenLetterCandidates,aFactorsReconstructed]];*)
+EvenLetterCandidates=Factor[EvenLetterCandidates/.KinematicRulesBackWards]
+
+
+EvenLetterCandidatesPara=DeleteDuplicates[DeleteElements[Flatten[Map[FactorList[#][[All,1]]&,EvenLetterCandidates]],{-1,1}]];
+EvenLetterCandidatesPara=DeleteDuplicates[Join[EvenLetterCandidatesPara,Avecs]];
+EvenLetterCandidates=EvenLetterCandidatesPara;
+
+
 ELSclice=Factor[EvenLetterCandidates/.SliceTpoint,Modulus->$P];
 ELSclice//Length
 EvenLetterCandidates//Length
+
+
+OddPos=DLogs[[All,1]]
+OddPos//Length
 
 
 Monitor[ABReco=Table[
@@ -299,11 +332,11 @@ vars=Variables[r];
 quadvar=vars[[First[Flatten[Position[Map[Exponent[r,#]&,vars],2]]]]];
 
 b=Factor[Coefficient[LogArgNum,Times@@DeleteDuplicates[Cases[LogArgNum,_root,Infinity]]],Modulus->$P];
-FFactors=Times@@Map[CheckLetterFactor[FSlice,#]&,Range[191]];
+FFactors=Times@@Map[CheckLetterFactor[FSlice,#]&,Range[Length[EvenLetterCandidates]]];
 
 If[!NumberQ[Expand[FSlice/FFactors/.Fac[n_]:>ELSclice[[n]],Modulus->$P]],
 FFactors=$Failed];
-If[!NumberQ[b],FactorsOdd=Times@@Map[CheckLetterFactor[b,#]&,Range[191]];If[FactorsOdd==1,FactorsOdd=$Failed],FactorsOdd=b];
+If[!NumberQ[b],FactorsOdd=Times@@Map[CheckLetterFactor[b,#]&,Range[Length[EvenLetterCandidates]]];If[FactorsOdd==1,FactorsOdd=$Failed],FactorsOdd=b];
 If[!NumberQ[Expand[b/FactorsOdd/.Fac[n_]:>ELSclice[[n]],Modulus->$P]],
 FactorsOdd=$Failed];
 
@@ -311,7 +344,7 @@ FFull=Factor[FFactors/.Fac[n_]:>EvenLetterCandidates[[n]]];
 bFull=Factor[FactorsOdd/.Fac[n_]:>EvenLetterCandidates[[n]]];
 
 If[(FactorsOdd=!=$Failed) && (FFactors=!=$Failed),
-sol=Solve[Expand[Discriminant[Expand[k FFull+bFull^2 *r/.Delete[PhaseSpacePoints[[1]],First[Flatten[Position[PhaseSpacePoints[[1,All,1]],quadvar]]]],Modulus->$P],quadvar]/.PhaseSpacePoints[[1]],Modulus->$P]==0,k,Modulus->$P];
+sol=Solve[Expand[Discriminant[Expand[k FFull+bFull^2 *r/.Delete[phasespacepointsPara[[1]],First[Flatten[Position[phasespacepointsPara[[1,All,1]],quadvar]]]],Modulus->$P],quadvar]/.phasespacepointsPara[[1]],Modulus->$P]==0,k,Modulus->$P];
 aFull=root[Factor[-4 FFull+bFull^2 *r/.sol]];
 sol=Flatten[sol/.n_Integer:>RationalReconstruct[n]][[All,2]];
 sol=DeleteElements[sol,{0}];
@@ -331,17 +364,23 @@ ABReco//Length
 ABReco=ABReco/.root[n_Integer x_^2]:>Sqrt[n]x;
 
 
-Export[CurrentDir<>"OddLetterReco1AB.txt",ABReco]
+Export[CurrentDir<>"OddLetterReco2AB-PARA.txt",ABReco]
 
 
-DeleteDuplicates[ABReco[[DeleteDuplicates[Position[ABReco,$Failed][[All,1]]]]][[All,1,1]]]
+Avecs=DeleteElements[ABReco[[All,2]],{$Failed}]
 
 
-(* ::Section::Closed:: *)
+Avecs=DeleteElements[Flatten[Map[FactorList[#][[All,1]]&,Avecs]],{-1,1}]
+
+
+ABReco[[1]]
+
+
+(* ::Section:: *)
 (*Debug*)
 
 
-pos=223;
+pos=1;
 (*pos=5*)
 LogArgNum=Numerator[DLogs[[pos,2]]/.Log[x_]:>x];
 LogArgDen=Denominator[DLogs[[pos,2]]/.Log[x_]:>x];
@@ -353,21 +392,21 @@ vars=Variables[r];
 quadvar=vars[[First[Flatten[Position[Map[Exponent[r,#]&,vars],2]]]]];
 
 b=Factor[Coefficient[LogArgNum,Times@@DeleteDuplicates[Cases[LogArgNum,_root,Infinity]]],Modulus->$P]
-FFactors=Times@@Map[CheckLetterFactor[FSlice,#]&,Range[191]]
+FFactors=Times@@Map[CheckLetterFactor[FSlice,#]&,Range[Length[EvenLetterCandidates]]]
 
-If[!NumberQ[Expand[FSlice/FFactors/.Fac[n_]:>ELSclice[[n]],Modulus->$P]],
+If[!NumberQ[Expand[FSlice/FFactors/.Fac[n_]:>ELSclice[[n]]//Echo,Modulus->$P]],
 FFactors=$Failed];
-If[!NumberQ[b],FactorsOdd=Times@@Map[CheckLetterFactor[b,#]&,Range[191]];If[FactorsOdd==1,FactorsOdd=$Failed],FactorsOdd=b];
+If[!NumberQ[b],FactorsOdd=Times@@Map[CheckLetterFactor[b,#]&,Range[Length[EvenLetterCandidates]]]//Echo;If[FactorsOdd==1,FactorsOdd=$Failed],FactorsOdd=b];
 
 FactorsOdd
-If[!NumberQ[Expand[b/FactorsOdd/.Fac[n_]:>ELSclice[[n]],Modulus->$P]],
+If[!NumberQ[Expand[b/FactorsOdd/.Fac[n_]:>ELSclice[[n]]//Echo,Modulus->$P]],
 FactorsOdd=$Failed];
 
 FFull=Factor[FFactors/.Fac[n_]:>EvenLetterCandidates[[n]]];
 bFull=Factor[FactorsOdd/.Fac[n_]:>EvenLetterCandidates[[n]]];
 
 If[(FactorsOdd=!=$Failed) && (FFactors=!=$Failed),
-sol=Solve[Expand[Discriminant[Expand[k FFull+bFull^2 *r/.Delete[PhaseSpacePoints[[1]],First[Flatten[Position[PhaseSpacePoints[[1,All,1]],quadvar]]]],Modulus->$P],quadvar]/.PhaseSpacePoints[[1]],Modulus->$P]==0,k,Modulus->$P];
+sol=Solve[Expand[Discriminant[Expand[k FFull+bFull^2 *r/.Delete[phasespacepointsPara[[1]],First[Flatten[Position[phasespacepointsPara[[1,All,1]],quadvar]]]],Modulus->$P],quadvar]/.phasespacepointsPara[[1]],Modulus->$P]==0,k,Modulus->$P];
 aFull=root[Factor[-4 FFull+bFull^2 *r/.sol]];
 sol=Flatten[sol/.n_Integer:>RationalReconstruct[n]][[All,2]];
 sol=DeleteElements[sol,{0}];
@@ -378,25 +417,28 @@ aFull=aFull/.root[x_^2]:>x;
 usedroots=root[sqrt1]root[sqrt2]/.root[1]->1;
 
 
-sol=Solve[Expand[Discriminant[Expand[k FFull+bFull^2 *r/.Delete[PhaseSpacePoints[[1]],First[Flatten[Position[PhaseSpacePoints[[1,All,1]],quadvar]]]],Modulus->$P],quadvar]/.PhaseSpacePoints[[1]],Modulus->$P]==0,k,Modulus->$P]
-
-aFull=root[Factor[-4 FFull+bFull^2 *r/.sol]];
-sol=Flatten[sol/.n_Integer:>RationalReconstruct[n]][[All,2]]
-sol=DeleteElements[sol,{0}]
-sol=Delete[sol,Position[Denominator[sol], x_ /; x > 500]]
-aFull=root[Factor[sol[[1]] FFull+bFull^2 *r]];
+IntegrandsMat[[1]]
+FSlice
 
 
+FFull
 
 
-
-aFull=root[Factor[-4 FFull+bFull^2 *r/.sol]];
-
-
-aFull
+r
 
 
 
+Times@@Map[CheckLetterFactor[Factor[LogArgNum/.root[x_]:>0,Modulus->$P],#]&,Range[Length[EvenLetterCandidates]]]
 
 
-2147483643//RationalReconstruct
+TestArg=Log[(a1+b1 r1)/(a1-b1 r1)]+Log[(a2+b2 r1)/(a2-b2 r1)]/.Log[x_]+Log[y_]:>Log[x y]/.Log[x_]:>x
+
+
+ExpandNumerator[ExpandDenominator[TestArg]]
+
+
+aNew=(a1 a2+b1 b2 r1^2)
+bNew=(a2 b1+a1 b2 )
+
+
+

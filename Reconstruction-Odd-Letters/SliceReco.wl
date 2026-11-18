@@ -79,7 +79,10 @@ rootVectorN=rootVector/.PhaseSpacePoints[[1]];
 RootRatioMat=Expand[Table[Together[rootVectorN[[i1]]/rootVectorN[[i2]]],{i1,1,Length[PureIntegrals]},{i2,1,Length[PureIntegrals]}],Modulus->$P]*DeFoldMat;
 EvenPos=Position[RootRatioMat,1];
 (*LinearizedEvenPos=Map[GetLinPos[#[[1]],#[[2]],95]&,EvenPos]*)
-OddPos=Complement[Position[DeFoldMat,1],EvenPos]
+OddPos=Complement[Position[DeFoldMat,1],EvenPos];
+
+PrevReco=ReadList[CurrentDir<>"OddLetterReco1AB.txt"];
+OddPos=PrevReco[[DeleteDuplicates[Position[PrevReco,$Failed][[All,1]]]]][[All,1]]
 
 
 (* ::Section::Closed:: *)
@@ -109,7 +112,7 @@ tpoint=PhaseSpacePoints[[1,;;-2]]
 ChangeAuxVarInDe[s16,s12,DIsij,tpoint]
 
 
-(* ::Section:: *)
+(* ::Section::Closed:: *)
 (*Reconstruction*)
 
 
@@ -253,6 +256,8 @@ Factor[RecoFac/.SliceTpoint,Modulus->$P]
 
 
 
+
+
 (* ::Section:: *)
 (*SATISFACTORY YEAAAAH*)
 
@@ -318,8 +323,17 @@ Integrands=ReadList[CurrentDir<>"Integrands.txt"];
 (*Find a factors*)
 
 
+PrevReco=ReadList[CurrentDir<>"OddLetterReco1AB.txt"];
+PrevReco2=ReadList[CurrentDir<>"OddLetterReco2AB.txt"];
+AFACS1=DeleteElements[DeleteDuplicates[Flatten[Map[FactorList[#][[All,1]]&,DeleteDuplicates[DeleteElements[PrevReco[[All,2]],{$Failed}]]/.root[n_Integer x_^2 y_^2]:>Sqrt[n]x y]]],{-1,1}];
+AFACS2=DeleteElements[DeleteDuplicates[Flatten[Map[FactorList[#][[All,1]]&,DeleteDuplicates[DeleteElements[PrevReco2[[All,2]],{$Failed}]]/.root[n_Integer x_^2 y_^2]:>Sqrt[n]x y]]],{-1,1}];
+AFACS=DeleteDuplicates[Join[AFACS1,AFACS2]];
+
+Complement[AFACS2,AFACS1]
+
+
 EvenLetterCandidates=ReadList[HomeDir<>"/Reconstruction-NewPara/EvenLetterCandidates.txt"];
-EvenLetterCandidates=DeleteDuplicates[Join[EvenLetterCandidates,aFactorsReconstructed]];
+EvenLetterCandidates=DeleteDuplicates[Join[EvenLetterCandidates,AFACS]];
 ELSclice=Factor[EvenLetterCandidates/.SliceTpoint,Modulus->$P];
 ELSclice//Length
 EvenLetterCandidates//Length
@@ -336,11 +350,11 @@ vars=Variables[r];
 quadvar=vars[[First[Flatten[Position[Map[Exponent[r,#]&,vars],2]]]]];
 
 b=Factor[Coefficient[LogArgNum,Times@@DeleteDuplicates[Cases[LogArgNum,_root,Infinity]]],Modulus->$P];
-FFactors=Times@@Map[CheckLetterFactor[FSlice,#]&,Range[191]];
+FFactors=Times@@Map[CheckLetterFactor[FSlice,#]&,Range[Length[EvenLetterCandidates]]];
 
 If[!NumberQ[Expand[FSlice/FFactors/.Fac[n_]:>ELSclice[[n]],Modulus->$P]],
 FFactors=$Failed];
-If[!NumberQ[b],FactorsOdd=Times@@Map[CheckLetterFactor[b,#]&,Range[191]];If[FactorsOdd==1,FactorsOdd=$Failed],FactorsOdd=b];
+If[!NumberQ[b],FactorsOdd=Times@@Map[CheckLetterFactor[b,#]&,Range[Length[EvenLetterCandidates]]];If[FactorsOdd==1,FactorsOdd=$Failed],FactorsOdd=b];
 If[!NumberQ[Expand[b/FactorsOdd/.Fac[n_]:>ELSclice[[n]],Modulus->$P]],
 FactorsOdd=$Failed];
 
@@ -365,13 +379,16 @@ DeleteDuplicates[Position[ABReco,$Failed][[All,1]]]//Length
 ABReco//Length
 
 
-ABReco=ABReco/.root[n_Integer x_^2]:>Sqrt[n]x;
+ABReco=ABReco/.root[n_Integer x_^2]:>Sqrt[n]x/.root[n_Integer x_^2 y_^2]:>Sqrt[n]x y;
 
 
-Export[CurrentDir<>"OddLetterReco1AB.txt",ABReco]
+Export[CurrentDir<>"OddLetterReco2AB.txt",ABReco]
 
 
 DeleteDuplicates[ABReco[[DeleteDuplicates[Position[ABReco,$Failed][[All,1]]]]][[All,1,1]]]
+
+
+ABReco[[All,2]]
 
 
 (* ::Section::Closed:: *)
