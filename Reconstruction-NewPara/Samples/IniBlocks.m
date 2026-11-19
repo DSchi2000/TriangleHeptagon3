@@ -4,7 +4,7 @@
 (*Settings*)
 
 
-NSamples=50;
+NSamples=10000;
 AuxVar=s16;
 $P=2^31-1;
 (*OutPutPath="Samples-1";*)
@@ -12,8 +12,8 @@ $P=2^31-1;
 (*OutPutPath="Bivariate-Slice-1";*)
 OutPutPath="ParaSamples-10000-1";
 SliceVar=s16;
-NParrallel=20;
-KIRACores=20;
+NParrallel=50;
+KIRACores=50;
 EpsRecoLenth=1;
 MaxCutInts=Range[95];
 reset=True;
