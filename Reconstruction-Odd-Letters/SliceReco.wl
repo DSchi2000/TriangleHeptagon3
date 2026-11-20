@@ -85,7 +85,7 @@ PrevReco=ReadList[CurrentDir<>"OddLetterReco1AB.txt"];
 OddPos=PrevReco[[DeleteDuplicates[Position[PrevReco,$Failed][[All,1]]]]][[All,1]]
 
 
-(* ::Section::Closed:: *)
+(* ::Section:: *)
 (*Variable Shift Tech*)
 
 
@@ -112,7 +112,7 @@ tpoint=PhaseSpacePoints[[1,;;-2]]
 ChangeAuxVarInDe[s16,s12,DIsij,tpoint]
 
 
-(* ::Section::Closed:: *)
+(* ::Section:: *)
 (*Reconstruction*)
 
 
@@ -252,6 +252,8 @@ Factor[RecoFac/.SliceTpoint,Modulus->$P]
 
 
 =
+
+
 
 
 

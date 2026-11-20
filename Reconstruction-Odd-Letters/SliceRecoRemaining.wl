@@ -72,10 +72,11 @@ GetNumberOfTermsNeeded[n_,num_]:=Binomial[n + num-1, n-1]
 (*Find Even Letter Pos*)
 
 
+
+
+
 rootVector=Map[Times@@DeleteDuplicates[Cases[#,_root,Infinity]]&,PureIntegrals]/.{}->1/.root[x_]:>x;
 DeFoldMat=Normal[Total[Table[ArrayReshape[LinearTerm[var][[1,1]],{Length[PureIntegrals],Length[PureIntegrals]}],{var,usedvars}]]]/.n_Integer/;(n>0):>1;
-
-
 rootVectorN=rootVector/.PhaseSpacePoints[[1]];
 RootRatioMat=Expand[Table[Together[rootVectorN[[i1]]/rootVectorN[[i2]]],{i1,1,Length[PureIntegrals]},{i2,1,Length[PureIntegrals]}],Modulus->$P]*DeFoldMat;
 EvenPos=Position[RootRatioMat,1];
@@ -242,9 +243,6 @@ pos=1;
 (*Reco*)
 
 
-
-
-
 Get[ToString[StringJoin[HomeDir,"/files/ExtraRecoModules.m"]]];
 pos1=43;
 pos2=35;
@@ -261,7 +259,7 @@ NewIntDt=Factor[Expand[Integrands . bvec[[All,2]],Modulus->$P],Modulus->$P]
 NewIntDt=NewIntDt*(root[sqrt2]/root[sqrt1])/.root[1]->1/.SliceTpoint/.root[x_]:>root[Factor[x,Modulus->$P]]
 
 
-(* ::Section::Closed:: *)
+(* ::Section:: *)
 (*Integrate*)
 
 
@@ -345,6 +343,8 @@ Factor[RecoFac/.SliceTpoint,Modulus->$P]
 
 
 
+
+
 (* ::Section:: *)
 (*SATISFACTORY YEAAAAH*)
 
@@ -415,7 +415,7 @@ DLogs=ReadList[CurrentDir<>"Dlogs.txt"];
 Integrands=ReadList[CurrentDir<>"Integrands.txt"];
 
 
-(* ::Section::Closed:: *)
+(* ::Section:: *)
 (*Find a factors*)
 
 
