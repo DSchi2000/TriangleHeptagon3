@@ -40,3 +40,107 @@ SimplifyOnVariety[expr_, gens_List : {}, vars_List : GramVarsOrder] :=
 Get[FileNameJoin[{DirectoryName[$InputFileName], "..", "4DBasis",
     "Parametrization.m"}]];
 SimplifyOnVarietyParam[expr_] := Factor[Together[expr /. KinematicRulesBackWards]]
+
+(* Method 3: factor-by-factor reduction in a single variable (default: s16,
+   which is degree <= 2 in G6 for every letter seen so far). FactorList the
+   numerator and denominator separately; for every irreducible factor (of
+   EITHER one, unlike Method 1) whose degree in `var` is >= its degree in the
+   constraint, polynomial-divide by the constraint and re-factor the
+   remainder; then let Cancel merge whatever duplicate factors that exposes.
+   This is what actually finds a simplification like a big denominator
+   factor collapsing to a product of two much smaller known letters, while
+   (unlike Method 2) keeping the answer in the ORIGINAL kinematic invariants
+   and (unlike Method 1) not leaving an uncancelled mess when the numerator
+   or denominator is a high power of something. Validated on NewArg9393.txt:
+   reproduces N^3/(s34*A*M*C) in ~0.1s, matching the hand derivation and
+   agreeing with the original expression numerically at actual roots of
+   G6=0. Use this as the first thing to try on a new NewArg-*.txt; fall back
+   to Method 2 if it leaves visibly uncancelled high-degree factors (that
+   means the relevant redundant variable isn't `var`, or the degree
+   condition above doesn't isolate all the reducible pieces). *)
+SimplifyOnVarietyFactored[expr_, gens_List : {}, var_ : s16] := Module[
+  {constraint, degc, num, den, reduceOne, numFL, denFL, newNum, newDen},
+  constraint = If[gens === {}, G6, First[gens]];
+  degc = Exponent[constraint, var];
+
+  reduceOne[{base_, exp_}] := Module[{d, rem},
+    d = Exponent[base, var];
+    If[d >= degc && degc > 0,
+      rem = PolynomialQuotientRemainder[base, constraint, var][[2]];
+      Map[{#[[1]], #[[2]]*exp} &, FactorList[rem]]
+      ,
+      {{base, exp}}
+    ]
+  ];
+
+  {num, den} = {Numerator[#], Denominator[#]} &@Together[expr];
+  numFL = Flatten[reduceOne /@ FactorList[num], 1];
+  denFL = Flatten[reduceOne /@ FactorList[den], 1];
+  newNum = Times @@ (Power @@@ numFL);
+  newDen = Times @@ (Power @@@ denFL);
+  Cancel[newNum/newDen]
+  ]
+
+(* Same as above, but returns an Association with before/after LeafCounts and
+   the list of (original factor -> reduced factor list) replacements that
+   were actually performed, for logging when batching over many letters. *)
+SimplifyOnVarietyFactoredReport[expr_, gens_List : {}, var_ : s16] := Module[
+  {constraint, degc, num, den, reduceOne, log, numFL, denFL, newNum, newDen,
+   result},
+  constraint = If[gens === {}, G6, First[gens]];
+  degc = Exponent[constraint, var];
+  log = {};
+
+  reduceOne[{base_, exp_}] := Module[{d, rem, flist},
+    d = Exponent[base, var];
+    If[d >= degc && degc > 0,
+      rem = PolynomialQuotientRemainder[base, constraint, var][[2]];
+      flist = FactorList[rem];
+      AppendTo[log, base -> flist[[All, 1]]];
+      Map[{#[[1]], #[[2]]*exp} &, flist]
+      ,
+      {{base, exp}}
+    ]
+  ];
+
+  {num, den} = {Numerator[#], Denominator[#]} &@Together[expr];
+  numFL = Flatten[reduceOne /@ FactorList[num], 1];
+  denFL = Flatten[reduceOne /@ FactorList[den], 1];
+  newNum = Times @@ (Power @@@ numFL);
+  newDen = Times @@ (Power @@@ denFL);
+  result = Cancel[newNum/newDen];
+
+  <|
+    "Simplified" -> result,
+    "LeafCountBefore" -> LeafCount[expr],
+    "LeafCountAfter" -> LeafCount[result],
+    "ReducedFactors" -> log
+  |>
+  ]
+
+(* Batch-process a list of NewArg-style files: for each, Get the expression,
+   run SimplifyOnVarietyFactoredReport, Export "<name>-G6zero.txt" next to
+   it, and print a one-line progress report. Works identically whether
+   called from a notebook cell (after evaluating/Getting this file) or from
+   the command-line wrapper RunSimplifyOnGram.wls -- this is the one place
+   the actual batch logic lives, so both stay in sync. Returns the list of
+   output paths written. *)
+SimplifyFilesOnGram[files_List, gens_List : {}, var_ : s16] :=
+ Table[
+  Module[{expr, rep, outPath},
+   If[!FileExistsQ[file],
+    Print["SKIP (not found): ", file];
+    Continue[]
+    ];
+   expr = Get[file];
+   rep = SimplifyOnVarietyFactoredReport[expr, gens, var];
+   outPath = StringReplace[file, ".txt" ~~ EndOfString -> "-G6zero.txt"];
+   If[outPath === file, outPath = file <> "-G6zero.txt"];
+   Export[outPath, rep["Simplified"]];
+   Print[file, ":  ", rep["LeafCountBefore"], " -> ", rep["LeafCountAfter"],
+    " leaves  (", Length[rep["ReducedFactors"]], " factor(s) reduced)  ==> ",
+    outPath];
+   outPath
+   ],
+  {file, files}
+  ]

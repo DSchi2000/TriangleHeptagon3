@@ -111,7 +111,7 @@ Factor[Integrand[[1]],Modulus->$P]*)
 
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*Uvar*)
 
 
@@ -138,7 +138,7 @@ ReconstructedFunc=FuncR=BuildFunction[res[[1,1]],res[[2]]];
 ReconstructedFunc=Factor[ReconstructedFunc/.n_Integer:>RationalReconstruct[n]]
 
 
-Integrate[ReconstructedFunc,c1]
+NewLog=Integrate[ReconstructedFunc,s12]
 
 
 ReconstructedFunc=FuncR=BuildFunction[res[[1,1]],res[[2]]];
@@ -146,15 +146,59 @@ ReconstructedFunc=Factor[ReconstructedFunc/.n_Integer:>RationalReconstruct[n]]
 Integrate[ReconstructedFunc,s12]
 
 
-TestA=%85
-TestB=%105
+fullLog=logRational Log[KnowFactor]+NewLog/.Log[x_]-Log[y_]:>Log[x/y]
 
 
-TestA/.Log[x_]:>x
-TestB/.Log[x_]:>x
+Export[CurrentDir<>"Dlog-93-93.txt",fullLog]
 
 
-Factor[(TestA/.Log[x_]:>x)/(TestB/.Log[x_]:>x)]
+TestArgs=fullLog/.KinematicRulesForward/.Log[x_]:>Factor[x];
 
 
-Export[CurrentDir<>"Dlog-93-93.txt",Integrate[ReconstructedFunc,s12]]
+
+
+
+TestSeb=Get[HomeDir<>"/FitLetters/SebastianDLog9393.txt"];
+
+
+A=Factor[TestSeb/.KinematicRulesBackWards]
+B=Factor[TestArgs/.KinematicRulesBackWards]
+
+
+TestArgs[[2]]
+TestSeb[[1]]
+
+
+Factor[-TestSeb[[2]]]
+
+
+TestSeb
+
+
+NewArg=Factor[-TestArgs];
+
+
+Expand[TestSeb/.PhaseSpacePoints[[4]],Modulus->$P]
+Expand[NewArg/.PhaseSpacePoints[[4]],Modulus->$P]
+
+
+Export[CurrentDir<>"NewArg9393.txt",NewArg]
+
+
+Get[CurrentDir<>"NewArg9393-G6zero.txt"]
+
+
+NewArgOnG6Zero
+
+
+Together[TestSeb-NewArgOnG6Zero]
+Export[CurrentDir<>"DlogM-93-93.txt",Log[NewArgOnG6Zero]]
+
+
+Get[HomeDir<>"/SetUp/SimplifyOnGram.wl"]
+(*simplified = SimplifyOnVarietyFactored[NewArg]
+(* or, with a diagnostic report: *)
+rep = SimplifyOnVarietyFactoredReport[NewArg]*)
+
+
+simplified = SimplifyOnVarietyFactored[NewArg]
