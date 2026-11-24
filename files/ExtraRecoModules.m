@@ -601,8 +601,8 @@ m31Pow = With[{p = 2^31 - 1}, Compile[{{x, _Integer}, {n, _Integer}}, Module[{xn
 BuildFunction[nullspace_,Ansatz_]:=Module[{AnsatzNum,AnsatzDen},
 	AnsatzNum=Numerator[Ansatz];
 	AnsatzDen=Denominator[Ansatz];
-	AnsatzNum=Coefficient[AnsatzNum,Sort[Cases[AnsatzNum,_fac,Infinity]]];
-	AnsatzDen=Coefficient[AnsatzDen,Sort[Cases[AnsatzDen,_fac,Infinity]]];
+	AnsatzNum=Coefficient[AnsatzNum,Sort[Cases[{AnsatzNum},_fac,Infinity]]];
+	AnsatzDen=Coefficient[AnsatzDen,Sort[Cases[{AnsatzDen},_fac,Infinity]]];
 	
 	Return[(AnsatzNum . nullspace[[;;Length[AnsatzNum]]])/(AnsatzDen . nullspace[[Length[AnsatzNum]+1;;]])];
 	

@@ -34,8 +34,8 @@ LinearTerm2[usedvars[[i]]]=ReadList[FileNameJoin[{Directory[],ToString[StringFor
 (*Load Samples*)
 
 
-OutPutPaths={"Reconstruction-NewPara/Samples/ParaSamples-5000-1"};
-SplitLengths={1};
+OutPutPaths={"Reconstruction-NewPara/Samples/ParaSamples-10000-1"};
+SplitLengths={2};
 PhaseSpacePoints={};
 Do[
 phasespacepointsIN=ReadList[FileNameJoin[{HomeDir,ToString[StringForm["``/phasespacepoints.txt",OutPutPaths[[q]]]]}]];
@@ -64,7 +64,7 @@ LinearTerm[s12]//Length
 PhaseSpacePoints//Length
 
 
-LinearTerm[s16]
+Expand[LinearTerm[s12][[;;20,1,1]]*(PhaseSpacePoints[[;;20,2,2]]),Modulus->$P]
 
 
 (* ::Section::Closed:: *)
@@ -143,19 +143,46 @@ OddPosRem=Complement[OddPos,PrevReco[[All,1]]]
 VarGrid=ReadList[HomeDir<>"/Reconstruction1/VarGrid.txt"];
 
 
-OddPos[[1]]
+(* ::Section:: *)
+(*Linear Dependencies*)
+
+
+Unprotect[RowReduce];
+Clear[RowReduce];
+Protect[RowReduce];
+rtfactorsMap=Map[{#,root[rootVector[[#[[1]]]]/rootVector[[#[[2]]]]]}&,OddPosRem];
+rtfactors=DeleteDuplicates[Cases[rtfactors,_root,Infinity]];
+SameRootFacPos=OddPosRem[[Position[rtfactorsMap,rtfactors[[5]]][[All,1]]]]
+LinPos=Map[GetLinPos[#[[1]],#[[2]],95]&,SameRootFacPos]
+tpoint=Last[PhaseSpacePoints][[All,2]];
+MatSpace=Expand[Sum[tpoint[[i]]Normal[LinearTerm[diffInvariants[[i]]][[;;Length[LinPos],1,LinPos]]],{i,1,Length[diffInvariants]}],Modulus->$P];
+
+
+Rech=RowReduce[MatSpace,Modulus->$P]/.n_Integer:>RationalReconstruct[n];
+M=MatSpace;
+Rech//MatrixPlot
+pivotCols = DeleteCases[FirstPosition[#, x_ /; x != 0] & /@ Rech, _Missing][[All, 1]]
+LinDeps=Table[Rech[[All,q]] . Table[Ent[i],{i,1,Length[MatSpace]}],{q,1,Length[MatSpace]}];
+SameRootFacPos[[pivotCols]]
+
+
+(* ::Section:: *)
+(*Reco Letter*)
 
 
 G6=Get[HomeDir<>"/SetUp/SixPointGram.txt"];
 DLogs=ReadList[CurrentDir<>"Dlogs.txt"];
 IntegrandsReco=ReadList[CurrentDir<>"Integrands-Sorted.txt"];
-pos1=14;
-pos2=1;
+pos1=85;
+pos2=47;
 RemPos=First[Flatten[Position[OddPos,{pos1,pos2}]]]
 ExponentsNumi=Exponent[Numerator[IntegrandsReco[[RemPos,2]]],t]
 ExponentsDeno=Exponent[Denominator[IntegrandsReco[[RemPos,2]]],t]
 
 Entryusedvars=VarGrid[[pos1,pos2]]
+
+rootVector[[pos1]]//Variables
+rootVector[[pos2]]//Variables
 
 
 (* ::Section:: *)
@@ -196,15 +223,14 @@ Return[SymFactor];
 ]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*Things*)
 
 
-IntegrandSlice=IntegrandsReco[[RemPos]][[2,7]]
-SliceDenominator=Denominator[IntegrandSlice]/.root[x_]:>1
 
 
-(* ::Subsection:: *)
+
+(* ::Subsection::Closed:: *)
 (*Uvar*)
 
 
@@ -228,26 +254,39 @@ Expand[SliceTpoint/.t->phasespacepointsUV[[-1,-1,2]],Modulus->$P]
 phasespacepointsUV[[-1]]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*Letters*)
 
 
-EvenLetterCandidates=ReadList[HomeDir<>"/Reconstruction-NewPara/EvenLetterCandidates.txt"];
+(*EvenLetterCandidates=ReadList[HomeDir<>"/Reconstruction-NewPara/EvenLetterCandidates.txt"];*)
+EvenLetterCandidates=ReadList[HomeDir<>"/FitLetters/UsedEvenLetters.txt"];
 ELSclice=Factor[EvenLetterCandidates/.SliceTpoint,Modulus->$P];
 ELSclice//Length
 EvenLetterCandidates//Length
 
 
+(* ::Subsection:: *)
+(*Fit Deno*)
+
+
+intvar=s45
+intvarpos=First[Flatten[Position[diffInvariants,intvar]]];
+numpower=ExponentsNumi[[intvarpos]];
+IntegrandSlice=IntegrandsReco[[RemPos]][[2,intvarpos]]
+SliceDenominator=Denominator[IntegrandSlice]/.root[x_]:>1
 DenoFactors=Times@@Map[CheckLetterFactor[SliceDenominator,#]&,Range[Length[EvenLetterCandidates]]]
 DenominatorFromFactors=DenoFactors/.Fac[n_]:>EvenLetterCandidates[[n]]
+SliceDenominator/Factor[DenominatorFromFactors/.SliceTpoint,Modulus->$P]
 
 
 (* ::Section:: *)
 (*Reconstruction*)
 
 
-Get[ToString[StringJoin[HomeDir,"/files/ExtraRecoModules.m"]]];
 LaunchKernels[5];
+
+
+Get[ToString[StringJoin[HomeDir,"/files/ExtraRecoModules.m"]]];
 sqrt1=rootVector[[pos1]];
 sqrt2=rootVector[[pos2]];
 pos=GetLinPos[pos1,pos2,95];
@@ -259,47 +298,38 @@ usedvars=VarGrid[[pos1,pos2]];
 If[Length[usedvars]<10,newaux=Last[Complement[diffInvariants,usedvars]];
 FitVals=ParallelTable[Coefficient[ChangeAuxVarInDe[s16,newaux,Transpose[FitVals][[i]],PhaseSpacePoints[[i]]],Thread[ds[diffInvariants]]],{i,1,Length[PhaseSpacePoints]}];,
 FitVals=Transpose[FitVals]];
-
 (*Integrands=Table[Integrand=Expand[UniVarReconstructFUNCS[Expand[FitVals[[All,varpos]] DenominatorFromFactorsN/(sqrt2N/sqrt1N),Modulus->$P],PhaseSpacePoints,tvar,20,20,{},1,1],Modulus->$P];Factor[Integrand[[1]],Modulus->$P],{varpos,1,10}];
 Integrands=Integrands*(root[sqrt2]/root[sqrt1])/.root[1]->1/.SliceTpoint/.root[x_]:>root[Factor[x,Modulus->$P]];*)
 
 
 
-FitVals[[4]]
+(*intvar=s34;*)
+fitvec=Expand[FitVals[[All,First[Flatten[Position[diffInvariants,intvar]]]]]*DenominatorFromFactorsN/(sqrt2N/sqrt1N),Modulus->$P];
+Reco=ReconstructFUNCS[fitvec,PhaseSpacePoints[[All,Flatten[Map[Position[diffInvariants,#]&,usedvars]],2]],usedvars,numpower,0,Debug->True]
+Func=BuildFunction[Reco[[1,1]],Reco[[2]]]/.n_Integer:>RationalReconstruct[n]
+FullFunc=Func/DenominatorFromFactors *(root[sqrt2]/root[sqrt1])/.root[1]->1
 
 
-FitVals[[1]]
-IntegrandsReco[[1,2]]
+(* ::Section:: *)
+(*Integrate*)
 
 
-fitvec=Expand[FitVals[[All,7]]*DenominatorFromFactorsN/(sqrt2N/sqrt1N),Modulus->$P];
-fitvec=Expand[FitVals[[All,7]]*1/(sqrt2N/sqrt1N),Modulus->$P];
-
-(*fitvec=Expand[FitVals[[All,2]]/(sqrt2N/sqrt1N),Modulus->$P]*)
-
-
-Letters=ReadList["/home/daniel/Documents/PHD-LocalFiles/TriangleHeptagon3/Reconstruction-Odd-Letters/OddLetterReco1AB.txt"];
-testA=Letters[[1,2]]
-testB=Letters[[1,3]]
-testR=Letters[[1,4]]
-Dlog=Log[(testA+testB testR)/(testA-testB testR)];
-TestEnt=Factor[ExpandDenominator[Factor[D[Dlog,s12]/.Derivative[1][root][x_]:>1/(2root[x])]]/.root[x_]^3:>root[x]x/.root[x_]^2:>x]
-Factor[Expand[TestEnt/.SliceTpoint,Modulus->$P],Modulus->$P]/.root[x_]:>root[Factor[x,Modulus->$P]]
-Test=Factor[Expand[TestEnt/.PhaseSpacePoints[[-1]],Modulus->$P],Modulus->$P]/.root[x_]:>root[Factor[x,Modulus->$P]]
+Get["/home/daniel/Documents/packages/trager/Trager.wl"]
+roots=DeleteDuplicates[Cases[FullFunc,_root,Infinity]]
+rootrepls=Thread[Rule[roots,Map[rt[#]&,Range[Length[roots]]]]]
+qring=Expand[Table[rt[i]^2-(roots[[i]]/.root[x_]:>x),{i,Range[Length[roots]]}]]
+rtvars=Table[rt[i],{i,Range[Length[roots]]}]
+invrootrepls = Reverse /@ rootrepls;
+Dlog=TragerLogSubtraction[FullFunc/.rootrepls,intvar,rtvars,qring,Debug->True,Parallelize->True]
+Dlog=Dlog/.invrootrepls;
 
 
-Expand[Test/.root[n_]:>PowerMod[n,1/2,$P],Modulus->$P]
-FitVals[[1]]
+Num=Collect[Numerator[First[Cases[{Dlog},_Log,Infinity]/.Log[x_]:>x]],_root,Factor];
+usedroots=Times@@Cases[Num,_root,Infinity]
+bvac=Factor[Coefficient[Num,usedroots]]
+avac=Factor[Num/.root[x_]:>0]
+Export[CurrentDir<>"HandRecoLetters/"<>ToString[StringForm["DLog-``-``.txt",pos1,pos2]],{{pos1,pos2},avac,bvac,usedroots}]
+Export[CurrentDir<>"HandRecoLetters/"<>ToString[StringForm["IntegratedFunc-``-``.txt",pos1,pos2]],{{pos1,pos2},Dlog}]
 
 
-usedvars
 
-
-TestEnt1=LinearTerm[s12][[All,1,1]];
-Expand[TestEnt1*s12/.PhaseSpacePoints[[1]],Modulus->$P]
-
-
-ReconstructFUNCS[fitvec,PhaseSpacePoints[[All,All,2]],usedvars,1,1,Debug->True]
-
-
-?ReconstructFUNCS
