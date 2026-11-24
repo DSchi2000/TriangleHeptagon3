@@ -152,7 +152,7 @@ Clear[RowReduce];
 Protect[RowReduce];
 rtfactorsMap=Map[{#,root[rootVector[[#[[1]]]]/rootVector[[#[[2]]]]]}&,OddPosRem];
 rtfactors=DeleteDuplicates[Cases[rtfactors,_root,Infinity]];
-SameRootFacPos=OddPosRem[[Position[rtfactorsMap,rtfactors[[5]]][[All,1]]]]
+SameRootFacPos=OddPosRem[[Position[rtfactorsMap,rtfactors[[11]]][[All,1]]]]
 LinPos=Map[GetLinPos[#[[1]],#[[2]],95]&,SameRootFacPos]
 tpoint=Last[PhaseSpacePoints][[All,2]];
 MatSpace=Expand[Sum[tpoint[[i]]Normal[LinearTerm[diffInvariants[[i]]][[;;Length[LinPos],1,LinPos]]],{i,1,Length[diffInvariants]}],Modulus->$P];
@@ -173,8 +173,8 @@ SameRootFacPos[[pivotCols]]
 G6=Get[HomeDir<>"/SetUp/SixPointGram.txt"];
 DLogs=ReadList[CurrentDir<>"Dlogs.txt"];
 IntegrandsReco=ReadList[CurrentDir<>"Integrands-Sorted.txt"];
-pos1=85;
-pos2=47;
+pos1=75;
+pos2=10;
 RemPos=First[Flatten[Position[OddPos,{pos1,pos2}]]]
 ExponentsNumi=Exponent[Numerator[IntegrandsReco[[RemPos,2]]],t]
 ExponentsDeno=Exponent[Denominator[IntegrandsReco[[RemPos,2]]],t]
@@ -269,7 +269,7 @@ EvenLetterCandidates//Length
 (*Fit Deno*)
 
 
-intvar=s45
+intvar=mt2
 intvarpos=First[Flatten[Position[diffInvariants,intvar]]];
 numpower=ExponentsNumi[[intvarpos]];
 IntegrandSlice=IntegrandsReco[[RemPos]][[2,intvarpos]]
