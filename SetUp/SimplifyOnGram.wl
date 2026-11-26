@@ -118,6 +118,117 @@ SimplifyOnVarietyFactoredReport[expr_, gens_List : {}, var_ : s16] := Module[
   |>
   ]
 
+(* Method 3b: like Method 3, but doesn't commit to a single fixed pivot
+   variable. For every irreducible factor (numerator and denominator alike)
+   it tries ALL variables in `vars`, keeps only the candidates that (a) clear
+   the degree gate (deg_v(base) >= deg_v(constraint) > 0), AND (b) give a
+   genuinely POLYNOMIAL quotient (Denominator[Together[Q]] === 1) -- a
+   non-polynomial quotient just reintroduces a spurious denominator instead
+   of simplifying, so it's rejected outright rather than used -- and among
+   the survivors picks whichever gives the smallest LeafCount remainder,
+   but only if that remainder is actually smaller than the factor it
+   replaces. Re-factors and repeats, since reducing one factor can expose a
+   NEW factor whose degree in some other variable only now clears the gate
+   (this is exactly what happens on TestForClaude.txt: the whole numerator
+   is degree 1 in s16, so Method 3's default pivot does nothing at all; but
+   it's degree 2 in several other invariants, and pivoting on e.g. s234
+   collapses 2347 leaves to 127 -- a pure polynomial, the denominator
+   cancels away entirely). Stops when a full round fails to shrink the
+   overall expression, or after maxRounds. *)
+BestPivotForFactor[base_, constraint_, vars_List] := Module[{tries, valid},
+  tries = Table[
+    Module[{d, degc, qr, Q, R},
+     d = Exponent[base, v];
+     degc = Exponent[constraint, v];
+     If[d < degc || degc == 0,
+      Missing["ineligible"]
+      ,
+      qr = PolynomialQuotientRemainder[base, constraint, v];
+      Q = Together[qr[[1]]];
+      If[Denominator[Q] =!= 1,
+       Missing["nonpolynomial"]
+       ,
+       R = Together[qr[[2]]];
+       <|"Var" -> v, "Q" -> Q, "R" -> R, "LeafCount" -> LeafCount[R]|>
+       ]
+      ]
+     ],
+    {v, vars}
+    ];
+  valid = Select[tries, AssociationQ[#] && #["LeafCount"] < LeafCount[base] &];
+  If[valid === {}, Missing["none"], First[MinimalBy[valid, #["LeafCount"] &]]]
+  ]
+
+ReduceFactorBest[constraint_, vars_List][{base_, exp_}] := Module[{best},
+  best = BestPivotForFactor[base, constraint, vars];
+  If[MissingQ[best],
+   {{{base, exp}}, Null}
+   ,
+   {Map[{#[[1]], #[[2]]*exp} &, FactorList[best["R"]]], best["Var"] -> best}
+   ]
+  ]
+
+SimplifyOnVarietyFactoredBest[expr_, gens_List : {}, vars_List : GramVarsOrder,
+   maxRounds_Integer : 6] := Module[
+  {constraint, current, round, num, den, numFL, denFL, numOut, denOut,
+   newNum, newDen, candidate},
+  constraint = If[gens === {}, G6, First[gens]];
+  current = Together[expr];
+  For[round = 1, round <= maxRounds, round++,
+   {num, den} = {Numerator[current], Denominator[current]};
+   numFL = FactorList[num];
+   denFL = FactorList[den];
+   numOut = ReduceFactorBest[constraint, vars] /@ numFL;
+   denOut = ReduceFactorBest[constraint, vars] /@ denFL;
+   newNum = Times @@ (Power @@@ Flatten[numOut[[All, 1]], 1]);
+   newDen = Times @@ (Power @@@ Flatten[denOut[[All, 1]], 1]);
+   candidate = Cancel[newNum/newDen];
+   If[LeafCount[candidate] >= LeafCount[current], Break[]];
+   current = candidate;
+   ];
+  current
+  ]
+
+(* Same as above, but returns an Association with before/after LeafCounts and
+   a per-round log of which pivot variable was chosen for each reduced
+   factor (and the resulting LeafCount), for inspecting/batching. *)
+SimplifyOnVarietyFactoredBestReport[expr_, gens_List : {}, vars_List : GramVarsOrder,
+   maxRounds_Integer : 6] := Module[
+  {constraint, current, round, num, den, numFL, denFL, numOut, denOut,
+   newNum, newDen, candidate, improved, log, roundLog},
+  constraint = If[gens === {}, G6, First[gens]];
+  current = Together[expr];
+  log = {};
+  For[round = 1, round <= maxRounds, round++,
+   {num, den} = {Numerator[current], Denominator[current]};
+   numFL = FactorList[num];
+   denFL = FactorList[den];
+   numOut = ReduceFactorBest[constraint, vars] /@ numFL;
+   denOut = ReduceFactorBest[constraint, vars] /@ denFL;
+   newNum = Times @@ (Power @@@ Flatten[numOut[[All, 1]], 1]);
+   newDen = Times @@ (Power @@@ Flatten[denOut[[All, 1]], 1]);
+   candidate = Cancel[newNum/newDen];
+   improved = LeafCount[candidate] < LeafCount[current];
+   roundLog = <|
+     "Round" -> round,
+     "LeafCountBefore" -> LeafCount[current],
+     "LeafCountAfter" -> LeafCount[candidate],
+     "Accepted" -> improved,
+     "NumeratorChoices" -> Cases[numOut[[All, 2]], _ -> _],
+     "DenominatorChoices" -> Cases[denOut[[All, 2]], _ -> _]
+     |>;
+   AppendTo[log, roundLog];
+   If[!improved, Break[]];
+   current = candidate;
+   ];
+  <|
+   "Simplified" -> current,
+   "LeafCountBefore" -> LeafCount[expr],
+   "LeafCountAfter" -> LeafCount[current],
+   "Rounds" -> log
+   |>
+  ]
+
 (* Batch-process a list of NewArg-style files: for each, Get the expression,
    run SimplifyOnVarietyFactoredReport, Export "<name>-G6zero.txt" next to
    it, and print a one-line progress report. Works identically whether
@@ -140,6 +251,31 @@ SimplifyFilesOnGram[files_List, gens_List : {}, var_ : s16] :=
    Print[file, ":  ", rep["LeafCountBefore"], " -> ", rep["LeafCountAfter"],
     " leaves  (", Length[rep["ReducedFactors"]], " factor(s) reduced)  ==> ",
     outPath];
+   outPath
+   ],
+  {file, files}
+  ]
+
+(* Same as SimplifyFilesOnGram, but uses SimplifyOnVarietyFactoredBestReport
+   (tries every pivot variable per factor, keeps the smallest polynomial
+   reduction, iterates) instead of a single fixed pivot. Slower per file, but
+   finds reductions the fixed-s16 pivot misses entirely -- e.g. an expression
+   whose numerator is only degree 1 in s16 but degree 2 in other invariants. *)
+SimplifyFilesOnGramBest[files_List, gens_List : {}, vars_List : GramVarsOrder,
+   maxRounds_Integer : 6] :=
+ Table[
+  Module[{expr, rep, outPath},
+   If[!FileExistsQ[file],
+    Print["SKIP (not found): ", file];
+    Continue[]
+    ];
+   expr = Get[file];
+   rep = SimplifyOnVarietyFactoredBestReport[expr, gens, vars, maxRounds];
+   outPath = StringReplace[file, ".txt" ~~ EndOfString -> "-G6zero.txt"];
+   If[outPath === file, outPath = file <> "-G6zero.txt"];
+   Export[outPath, rep["Simplified"]];
+   Print[file, ":  ", rep["LeafCountBefore"], " -> ", rep["LeafCountAfter"],
+    " leaves  (", Length[rep["Rounds"]], " round(s))  ==> ", outPath];
    outPath
    ],
   {file, files}

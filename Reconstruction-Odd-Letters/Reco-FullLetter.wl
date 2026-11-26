@@ -138,7 +138,10 @@ PrevReco3=ReadList[CurrentDir<>"OddLetterReco2AB-PARA.txt"];
 PrevReco1=Delete[PrevReco1,DeleteDuplicates[Position[PrevReco1,$Failed][[All,1]]]/.n_Integer:>{n}];
 PrevReco2=Delete[PrevReco2,DeleteDuplicates[Position[PrevReco2,$Failed][[All,1]]]/.n_Integer:>{n}];
 PrevReco3=Delete[PrevReco3,DeleteDuplicates[Position[PrevReco3,$Failed][[All,1]]]/.n_Integer:>{n}];
-PrevReco=SortBy[Join[PrevReco1,PrevReco2,PrevReco3],First]
+files=FileNames["DLog*.txt", CurrentDir<>"HandRecoLetters"];
+PrevReco4=Map[ReadList[#]&,files];
+
+PrevReco=SortBy[Join[PrevReco1,PrevReco2,PrevReco3,PrevReco4],First]
 OddPosRem=Complement[OddPos,PrevReco[[All,1]]]
 VarGrid=ReadList[HomeDir<>"/Reconstruction1/VarGrid.txt"];
 
@@ -150,10 +153,17 @@ VarGrid=ReadList[HomeDir<>"/Reconstruction1/VarGrid.txt"];
 Unprotect[RowReduce];
 Clear[RowReduce];
 Protect[RowReduce];
-rtfactorsMap=Map[{#,root[rootVector[[#[[1]]]]/rootVector[[#[[2]]]]]}&,OddPosRem];
-rtfactors=DeleteDuplicates[Cases[rtfactors,_root,Infinity]];
-SameRootFacPos=OddPosRem[[Position[rtfactorsMap,rtfactors[[11]]][[All,1]]]]
-LinPos=Map[GetLinPos[#[[1]],#[[2]],95]&,SameRootFacPos]
+rtfactorsMap=Map[{#,root[rootVector[[#[[1]]]]/rootVector[[#[[2]]]]]}&,OddPos];
+rtfactors=DeleteDuplicates[Cases[rtfactorsMap,_root,Infinity]]//EchoFunction[Length];
+SameRootFacPos=OddPos[[Position[rtfactorsMap,rtfactors[[3]]][[All,1]]]];
+
+Print["Unknowns:"]
+unknowns=Complement[SameRootFacPos,PrevReco[[All,1]]]
+Print["Knowns:"]
+knowns=Intersection[SameRootFacPos,PrevReco[[All,1]]]
+SameRootFacPos=Join[knowns,unknowns];
+
+LinPos=Map[GetLinPos[#[[1]],#[[2]],95]&,SameRootFacPos];
 tpoint=Last[PhaseSpacePoints][[All,2]];
 MatSpace=Expand[Sum[tpoint[[i]]Normal[LinearTerm[diffInvariants[[i]]][[;;Length[LinPos],1,LinPos]]],{i,1,Length[diffInvariants]}],Modulus->$P];
 
@@ -163,7 +173,33 @@ M=MatSpace;
 Rech//MatrixPlot
 pivotCols = DeleteCases[FirstPosition[#, x_ /; x != 0] & /@ Rech, _Missing][[All, 1]]
 LinDeps=Table[Rech[[All,q]] . Table[Ent[i],{i,1,Length[MatSpace]}],{q,1,Length[MatSpace]}];
-SameRootFacPos[[pivotCols]]
+basis=SameRootFacPos[[pivotCols]]//EchoFunction[Length]
+LinDeps=LinDeps/.Ent[n_]:>Ent[SameRootFacPos[[pivotCols]][[n]]];
+Complement[basis,PrevReco[[All,1]]]
+
+
+Map[Flatten[Position[PrevReco[[All,1]],#]]&,basis]
+
+
+(* ::Subsection:: *)
+(*Todo*)
+
+
+{{75,76}},{{90,71}},{{90,72}},{{76,75},{93,75}}
+
+
+(* ::Subsection::Closed:: *)
+(*Old*)
+
+
+LinDepsEQN=DeleteElements[Thread[Thread[Ent[SameRootFacPos]]==LinDeps],{True}];
+solset=DeleteDuplicates[Cases[LinDepsEQN,_Ent,Infinity]];
+solset=Thread[Ent[SameRootFacPos]];
+unsolved=Complement[solset,Thread[Ent[PrevReco[[All,1]]]]];
+solsetSorted=Join[unsolved,Complement[solset,unsolved]];
+(*sol=Solve[LinDepsEQN,solsetSorted][[1]]*)
+Basis=DeleteDuplicates[Cases[sol[[All,2]],_Ent,Infinity]]//EchoFunction[Length]
+Intersection[Basis,unsolved]//EchoFunction[Length]
 
 
 (* ::Section:: *)
@@ -173,16 +209,16 @@ SameRootFacPos[[pivotCols]]
 G6=Get[HomeDir<>"/SetUp/SixPointGram.txt"];
 DLogs=ReadList[CurrentDir<>"Dlogs.txt"];
 IntegrandsReco=ReadList[CurrentDir<>"Integrands-Sorted.txt"];
-pos1=75;
-pos2=10;
+pos1=90;
+pos2=45;
 RemPos=First[Flatten[Position[OddPos,{pos1,pos2}]]]
 ExponentsNumi=Exponent[Numerator[IntegrandsReco[[RemPos,2]]],t]
 ExponentsDeno=Exponent[Denominator[IntegrandsReco[[RemPos,2]]],t]
 
 Entryusedvars=VarGrid[[pos1,pos2]]
 
-rootVector[[pos1]]//Variables
-rootVector[[pos2]]//Variables
+rootVector[[pos1]]//Variables//Sort
+rootVector[[pos2]]//Variables//Sort
 
 
 (* ::Section:: *)
@@ -223,11 +259,8 @@ Return[SymFactor];
 ]
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*Things*)
-
-
-
 
 
 (* ::Subsection::Closed:: *)
@@ -269,7 +302,7 @@ EvenLetterCandidates//Length
 (*Fit Deno*)
 
 
-intvar=mt2
+intvar=s34
 intvarpos=First[Flatten[Position[diffInvariants,intvar]]];
 numpower=ExponentsNumi[[intvarpos]];
 IntegrandSlice=IntegrandsReco[[RemPos]][[2,intvarpos]]
@@ -333,3 +366,60 @@ Export[CurrentDir<>"HandRecoLetters/"<>ToString[StringForm["IntegratedFunc-``-``
 
 
 
+(* ::Section:: *)
+(*TestZone*)
+
+
+Get["/home/daniel/Documents/PHD-LocalFiles/TriangleHeptagon3/SetUp/RunSimplifyOnGram.wls"]
+
+
+Test=Factor[PrevReco3[[20,2]]/.KinematicRulesForward]//EchoFunction[ByteCount]//EchoTiming
+simplified = SimplifyOnVarietyFactored[Test]//EchoFunction[ByteCount]//EchoTiming
+simplifiedFull = SimplifyOnVarietyFactoredBest[Test]//EchoFunction[ByteCount]//EchoTiming
+
+Expand[Test/.PhaseSpacePoints[[1]],Modulus->$P]
+Expand[simplified/.PhaseSpacePoints[[1]],Modulus->$P]
+Expand[simplifiedFull/.PhaseSpacePoints[[1]],Modulus->$P]
+
+
+
+
+
+Export[CurrentDir<>"TestForClaude.txt",simplified]
+
+
+
+
+
+test=s16^2 s12^2
+test2=Factor[Factor[test/.KinematicRulesBackWards]/.KinematicRulesForward]//EchoFunction[ByteCount];
+
+
+simplified = SimplifyOnVarietyFactored[test2]
+
+
+
+TestFacs=DeleteElements[FactorList[Test][[All,1]],{-1,1}]//EchoFunction[Length]
+
+
+
+
+
+Exponent[TestFacs[[3]],s16]
+
+
+GF2=Coefficient[G6,s16^2]
+CF2=Coefficient[TestFacs[[3]],s16^2]
+Q=Factor[CF2/GF2]
+
+
+Factor[Factor[TestFacs[[3]]-Q G6]]TestFacs[[1]]/TestFacs[[2]]
+
+
+simplified
+
+
+Factor[Test+Q G6]
+
+
+Factor[mt2/.KinematicRulesBackWards/.KinematicRulesForward]
