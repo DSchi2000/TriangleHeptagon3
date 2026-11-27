@@ -155,7 +155,7 @@ Clear[RowReduce];
 Protect[RowReduce];
 rtfactorsMap=Map[{#,root[rootVector[[#[[1]]]]/rootVector[[#[[2]]]]]}&,OddPos];
 rtfactors=DeleteDuplicates[Cases[rtfactorsMap,_root,Infinity]]//EchoFunction[Length];
-SameRootFacPos=OddPos[[Position[rtfactorsMap,rtfactors[[3]]][[All,1]]]];
+SameRootFacPos=OddPos[[Position[rtfactorsMap,rtfactors[[38]]][[All,1]]]];
 
 Print["Unknowns:"]
 unknowns=Complement[SameRootFacPos,PrevReco[[All,1]]]
@@ -373,7 +373,7 @@ Export[CurrentDir<>"HandRecoLetters/"<>ToString[StringForm["IntegratedFunc-``-``
 Get["/home/daniel/Documents/PHD-LocalFiles/TriangleHeptagon3/SetUp/RunSimplifyOnGram.wls"]
 
 
-Test=Factor[PrevReco3[[20,2]]/.KinematicRulesForward]//EchoFunction[ByteCount]//EchoTiming
+Test=Factor[PrevReco3[[21,2]]/.KinematicRulesForward]//EchoFunction[ByteCount]//EchoTiming
 simplified = SimplifyOnVarietyFactored[Test]//EchoFunction[ByteCount]//EchoTiming
 simplifiedFull = SimplifyOnVarietyFactoredBest[Test]//EchoFunction[ByteCount]//EchoTiming
 
@@ -382,10 +382,11 @@ Expand[simplified/.PhaseSpacePoints[[1]],Modulus->$P]
 Expand[simplifiedFull/.PhaseSpacePoints[[1]],Modulus->$P]
 
 
+LeafCount[simplifiedFull]
+LeafCount[simplified]
 
 
-
-Export[CurrentDir<>"TestForClaude.txt",simplified]
+Export[CurrentDir<>"TestForClaude.txt",Test]
 
 
 

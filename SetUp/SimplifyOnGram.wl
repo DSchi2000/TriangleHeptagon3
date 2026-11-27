@@ -119,113 +119,136 @@ SimplifyOnVarietyFactoredReport[expr_, gens_List : {}, var_ : s16] := Module[
   ]
 
 (* Method 3b: like Method 3, but doesn't commit to a single fixed pivot
-   variable. For every irreducible factor (numerator and denominator alike)
-   it tries ALL variables in `vars`, keeps only the candidates that (a) clear
-   the degree gate (deg_v(base) >= deg_v(constraint) > 0), AND (b) give a
-   genuinely POLYNOMIAL quotient (Denominator[Together[Q]] === 1) -- a
-   non-polynomial quotient just reintroduces a spurious denominator instead
-   of simplifying, so it's rejected outright rather than used -- and among
-   the survivors picks whichever gives the smallest LeafCount remainder,
-   but only if that remainder is actually smaller than the factor it
-   replaces. Re-factors and repeats, since reducing one factor can expose a
-   NEW factor whose degree in some other variable only now clears the gate
-   (this is exactly what happens on TestForClaude.txt: the whole numerator
-   is degree 1 in s16, so Method 3's default pivot does nothing at all; but
-   it's degree 2 in several other invariants, and pivoting on e.g. s234
-   collapses 2347 leaves to 127 -- a pure polynomial, the denominator
-   cancels away entirely). Stops when a full round fails to shrink the
-   overall expression, or after maxRounds. *)
-BestPivotForFactor[base_, constraint_, vars_List] := Module[{tries, valid},
-  tries = Table[
-    Module[{d, degc, qr, Q, R},
-     d = Exponent[base, v];
-     degc = Exponent[constraint, v];
-     If[d < degc || degc == 0,
-      Missing["ineligible"]
-      ,
-      qr = PolynomialQuotientRemainder[base, constraint, v];
-      Q = Together[qr[[1]]];
-      If[Denominator[Q] =!= 1,
-       Missing["nonpolynomial"]
-       ,
-       R = Together[qr[[2]]];
-       <|"Var" -> v, "Q" -> Q, "R" -> R, "LeafCount" -> LeafCount[R]|>
-       ]
-      ]
-     ],
-    {v, vars}
-    ];
-  valid = Select[tries, AssociationQ[#] && #["LeafCount"] < LeafCount[base] &];
-  If[valid === {}, Missing["none"], First[MinimalBy[valid, #["LeafCount"] &]]]
-  ]
+   variable. IMPORTANT: the thing to minimize is the LeafCount of the WHOLE
+   reassembled expression, NOT the LeafCount of the individual remainder --
+   an earlier version of this filtered candidates by "is this factor's own
+   remainder smaller than the factor it replaces", which looks like the
+   right local check but isn't: on TestForClaude.txt the s16-pivot
+   remainder of the big numerator factor is itself LARGER than the factor
+   it replaces (5096 vs 4473 leaves), yet substituting it is exactly what
+   lets the whole expression's denominator cancel away, collapsing 4630
+   leaves down to 163 -- a reduction a "shrink this factor first" filter
+   rejects outright, even though the plain fixed-s16-pivot Method 3 finds it
+   trivially (it never checks the local factor size at all). So instead,
+   for every irreducible factor (numerator and denominator alike) and every
+   candidate variable in `vars` that (a) clears the degree gate
+   (deg_v(base) >= deg_v(constraint) > 0) and (b) gives a genuinely
+   POLYNOMIAL quotient (a non-polynomial quotient just reintroduces a
+   spurious denominator), this actually substitutes that one factor's
+   remainder into the full expression, re-cancels, and measures the
+   resulting TOTAL LeafCount. Among every (factor, variable) trial across
+   the whole expression it greedily accepts whichever single substitution
+   shrinks the total the most, then re-factors (since a reduction can
+   expose a new factor whose degree in some other variable only now clears
+   the gate -- e.g. the 118-leaf sub-factor that appears after reducing
+   TestForClaude.txt's old content via s234) and repeats, stopping when no
+   remaining substitution helps or after maxSteps. This is more expensive
+   (each trial re-Cancels the whole expression) but actually optimizes what
+   you care about instead of a local proxy for it. *)
+GlobalBestStep[current_, constraint_, vars_List] := Module[
+  {num, den, numFL, denFL, curLC, bestTrial, bestLC, bestInfo},
+  {num, den} = {Numerator[current], Denominator[current]};
+  numFL = FactorList[num];
+  denFL = FactorList[den];
+  curLC = LeafCount[current];
+  bestTrial = Missing["none"];
+  bestLC = curLC;
+  bestInfo = Missing["none"];
 
-ReduceFactorBest[constraint_, vars_List][{base_, exp_}] := Module[{best},
-  best = BestPivotForFactor[base, constraint, vars];
-  If[MissingQ[best],
-   {{{base, exp}}, Null}
-   ,
-   {Map[{#[[1]], #[[2]]*exp} &, FactorList[best["R"]]], best["Var"] -> best}
-   ]
+  Do[
+   Module[{base, exp, restNum},
+    {base, exp} = numFL[[i]];
+    restNum = Times @@ (Power @@@ Delete[numFL, i]);
+    Do[
+     Module[{d, degc, qr, Q, R, trial, trialLC},
+      d = Exponent[base, v];
+      degc = Exponent[constraint, v];
+      If[d >= degc && degc > 0,
+       qr = PolynomialQuotientRemainder[base, constraint, v];
+       Q = Together[qr[[1]]];
+       If[Denominator[Q] === 1,
+        R = Together[qr[[2]]];
+        trial = Cancel[(restNum*R^exp)/den];
+        trialLC = LeafCount[trial];
+        If[trialLC < bestLC,
+         bestLC = trialLC; bestTrial = trial;
+         bestInfo = <|"Which" -> "Numerator", "Index" -> i, "Var" -> v|>;
+         ]
+        ]
+       ]
+      ],
+     {v, vars}
+     ]
+    ],
+   {i, Length[numFL]}
+   ];
+
+  Do[
+   Module[{base, exp, restDen},
+    {base, exp} = denFL[[i]];
+    restDen = Times @@ (Power @@@ Delete[denFL, i]);
+    Do[
+     Module[{d, degc, qr, Q, R, trial, trialLC},
+      d = Exponent[base, v];
+      degc = Exponent[constraint, v];
+      If[d >= degc && degc > 0,
+       qr = PolynomialQuotientRemainder[base, constraint, v];
+       Q = Together[qr[[1]]];
+       If[Denominator[Q] === 1,
+        R = Together[qr[[2]]];
+        trial = Cancel[num/(restDen*R^exp)];
+        trialLC = LeafCount[trial];
+        If[trialLC < bestLC,
+         bestLC = trialLC; bestTrial = trial;
+         bestInfo = <|"Which" -> "Denominator", "Index" -> i, "Var" -> v|>;
+         ]
+        ]
+       ]
+      ],
+     {v, vars}
+     ]
+    ],
+   {i, Length[denFL]}
+   ];
+
+  {bestTrial, bestLC, bestInfo}
   ]
 
 SimplifyOnVarietyFactoredBest[expr_, gens_List : {}, vars_List : GramVarsOrder,
-   maxRounds_Integer : 6] := Module[
-  {constraint, current, round, num, den, numFL, denFL, numOut, denOut,
-   newNum, newDen, candidate},
+   maxSteps_Integer : 30] := Module[
+  {constraint, current, step, result},
   constraint = If[gens === {}, G6, First[gens]];
   current = Together[expr];
-  For[round = 1, round <= maxRounds, round++,
-   {num, den} = {Numerator[current], Denominator[current]};
-   numFL = FactorList[num];
-   denFL = FactorList[den];
-   numOut = ReduceFactorBest[constraint, vars] /@ numFL;
-   denOut = ReduceFactorBest[constraint, vars] /@ denFL;
-   newNum = Times @@ (Power @@@ Flatten[numOut[[All, 1]], 1]);
-   newDen = Times @@ (Power @@@ Flatten[denOut[[All, 1]], 1]);
-   candidate = Cancel[newNum/newDen];
-   If[LeafCount[candidate] >= LeafCount[current], Break[]];
-   current = candidate;
+  For[step = 1, step <= maxSteps, step++,
+   result = GlobalBestStep[current, constraint, vars];
+   If[MissingQ[result[[1]]], Break[]];
+   current = result[[1]];
    ];
   current
   ]
 
 (* Same as above, but returns an Association with before/after LeafCounts and
-   a per-round log of which pivot variable was chosen for each reduced
-   factor (and the resulting LeafCount), for inspecting/batching. *)
+   a log of every accepted step (which factor, which pivot variable, and the
+   resulting total LeafCount), for inspecting/batching. *)
 SimplifyOnVarietyFactoredBestReport[expr_, gens_List : {}, vars_List : GramVarsOrder,
-   maxRounds_Integer : 6] := Module[
-  {constraint, current, round, num, den, numFL, denFL, numOut, denOut,
-   newNum, newDen, candidate, improved, log, roundLog},
+   maxSteps_Integer : 30] := Module[
+  {constraint, current, step, result, log},
   constraint = If[gens === {}, G6, First[gens]];
   current = Together[expr];
   log = {};
-  For[round = 1, round <= maxRounds, round++,
-   {num, den} = {Numerator[current], Denominator[current]};
-   numFL = FactorList[num];
-   denFL = FactorList[den];
-   numOut = ReduceFactorBest[constraint, vars] /@ numFL;
-   denOut = ReduceFactorBest[constraint, vars] /@ denFL;
-   newNum = Times @@ (Power @@@ Flatten[numOut[[All, 1]], 1]);
-   newDen = Times @@ (Power @@@ Flatten[denOut[[All, 1]], 1]);
-   candidate = Cancel[newNum/newDen];
-   improved = LeafCount[candidate] < LeafCount[current];
-   roundLog = <|
-     "Round" -> round,
-     "LeafCountBefore" -> LeafCount[current],
-     "LeafCountAfter" -> LeafCount[candidate],
-     "Accepted" -> improved,
-     "NumeratorChoices" -> Cases[numOut[[All, 2]], _ -> _],
-     "DenominatorChoices" -> Cases[denOut[[All, 2]], _ -> _]
-     |>;
-   AppendTo[log, roundLog];
-   If[!improved, Break[]];
-   current = candidate;
+  For[step = 1, step <= maxSteps, step++,
+   result = GlobalBestStep[current, constraint, vars];
+   If[MissingQ[result[[1]]], Break[]];
+   AppendTo[log,
+    <|"Step" -> step, "LeafCountBefore" -> LeafCount[current],
+      "LeafCountAfter" -> result[[2]], "Choice" -> result[[3]]|>];
+   current = result[[1]];
    ];
   <|
    "Simplified" -> current,
    "LeafCountBefore" -> LeafCount[expr],
    "LeafCountAfter" -> LeafCount[current],
-   "Rounds" -> log
+   "Steps" -> log
    |>
   ]
 
@@ -262,7 +285,7 @@ SimplifyFilesOnGram[files_List, gens_List : {}, var_ : s16] :=
    finds reductions the fixed-s16 pivot misses entirely -- e.g. an expression
    whose numerator is only degree 1 in s16 but degree 2 in other invariants. *)
 SimplifyFilesOnGramBest[files_List, gens_List : {}, vars_List : GramVarsOrder,
-   maxRounds_Integer : 6] :=
+   maxSteps_Integer : 30] :=
  Table[
   Module[{expr, rep, outPath},
    If[!FileExistsQ[file],
@@ -270,12 +293,12 @@ SimplifyFilesOnGramBest[files_List, gens_List : {}, vars_List : GramVarsOrder,
     Continue[]
     ];
    expr = Get[file];
-   rep = SimplifyOnVarietyFactoredBestReport[expr, gens, vars, maxRounds];
+   rep = SimplifyOnVarietyFactoredBestReport[expr, gens, vars, maxSteps];
    outPath = StringReplace[file, ".txt" ~~ EndOfString -> "-G6zero.txt"];
    If[outPath === file, outPath = file <> "-G6zero.txt"];
    Export[outPath, rep["Simplified"]];
    Print[file, ":  ", rep["LeafCountBefore"], " -> ", rep["LeafCountAfter"],
-    " leaves  (", Length[rep["Rounds"]], " round(s))  ==> ", outPath];
+    " leaves  (", Length[rep["Steps"]], " step(s))  ==> ", outPath];
    outPath
    ],
   {file, files}
